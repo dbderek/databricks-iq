@@ -1,0 +1,29 @@
+resources:
+  apps:
+    ui:
+      name: "databricks-iq"
+      source_code_path: ../src/ui
+      description: "A Streamlit app for monitoring jobs and other databricks usage"
+
+      # The resources which this app should have access to
+      resources:
+        - name: "yml-specified-warehouse"
+          sql_warehouse: # resource key
+            id: ${var.dbsql_serverless_warehouse_id}
+            permission: "CAN_MANAGE"
+
+    mcp:
+      name: "mcp-databricks-iq"
+      source_code_path: ../src/mcp/databricks_iq_mcp
+      description: "An MCP server app for the databricks-iq app"
+
+      # The resources which this app should have access to
+      resources:
+        - name: "yml-specified-warehouse"
+          sql_warehouse: # resource key
+            id: ${var.dbsql_serverless_warehouse_id}
+            permission: "CAN_MANAGE"
+            
+      permissions:
+        - service_principal_name: "agent-mcp-integration"
+          level: "CAN_USE"

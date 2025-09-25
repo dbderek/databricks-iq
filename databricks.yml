@@ -1,16 +1,28 @@
 bundle:
   name: databricks-iq
 
-run_as:
-  - user_name: derek.witt@databricks.com
-
 include:
   - resources/*.yml
   - resources/*/*.yml
 
 variables:
-  catalog: my_catalog
-  schema: my_schema
+  catalog: 
+    description: The Unity Catalog to use for this bundle.
+    default: databricksiq
+  schema: 
+    description: The schema within the Unity Catalog to use for this bundle.
+    default: main
+  service_principal_name:
+    description: The integration service principal name
+    default: databricks-iq-sp
+  sp_client_id:
+    description: The integration service principal client_id 
+  sp_secret_scope:
+    description: The databricks secret scope for the service principal secret
+  sp_secret_key:
+    description: The databricks secret key for the service principal secret
+  dbsql_serverless_warehouse_id: 
+    description: The Databricks SQL Serverless Warehouse ID to use for this bundle.
 
 targets:
   dev:
@@ -20,13 +32,51 @@ targets:
       host: https://fe-vm-buzzforce-demo-workspace.cloud.databricks.com/
       root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
     variables:
+      catalog: databricksiq
+      schema: main
       dbsql_serverless_warehouse_id: aaba42c163156b19
 
+  deve2:
+    mode: development
+    default: true
+    workspace:
+      host: https://e2-demo-field-eng.cloud.databricks.com/
+      root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: databricksiq
+      schema: main
+      service_principal_name: databricks-iq-sp
+      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
+      sp_secret_scope: databricksiq
+      sp_secret_key: databricks-iq-sp
+      dbsql_serverless_warehouse_id: 8baced1ff014912d
+
+  devazure:
+    mode: development
+    default: true
+    workspace:
+      host: https://adb-984752964297111.11.azuredatabricks.net/
+      root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: databricksiq
+      schema: main
+      service_principal_name: databricks-iq-mcp-sp
+      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
+      sp_secret_scope: databricksiq
+      sp_secret_key: databricks-iq-mcp-sp
+      dbsql_serverless_warehouse_id: 148ccb90800933a1
+      
   prod:
     mode: production
-    default: true
+    default: false
     workspace:
       host: https://fe-vm-buzzforce-demo-workspace.cloud.databricks.com/
       root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
     variables:
-      dbsql_serverless_warehouse_id: aaba42c163156b19
+      catalog: databricksiq
+      schema: main
+      service_principal_name: databricks-iq-sp
+      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
+      sp_secret_scope: databricksiq
+      sp_secret_key: databricks-iq-sp
+      dbsql_serverless_warehouse_id: 148ccb90800933a1

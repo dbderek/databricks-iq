@@ -1,3 +1,5 @@
+example_data/*
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -126,3 +128,4 @@ c_cpp_properties.json
 .vscode/launch.json
 .vscode/tasks.json
 .vscode/c_cpp_properties.json
+

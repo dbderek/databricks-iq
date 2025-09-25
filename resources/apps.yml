@@ -25,5 +25,5 @@ resources:
             permission: "CAN_MANAGE"
             
       permissions:
-        - service_principal_name: "agent-mcp-integration"
+        - service_principal_name: "databricks-iq-mcp-sp"
           level: "CAN_USE"

@@ -8,6 +8,10 @@ include:
   - resources/*.yml
   - resources/*/*.yml
 
+variables:
+  catalog: my_catalog
+  schema: my_schema
+
 targets:
   dev:
     mode: development

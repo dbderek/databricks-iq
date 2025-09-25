@@ -1,0 +1,15 @@
+resources:
+  pipelines:
+    databricks-iq-data:
+      name: databricks-iq-data
+      catalog: ${var.catalog}
+      schema: ${var.schema}
+      serverless: true
+      libraries:
+        - notebook:
+            path: ../notebooks/databricks-iq-data/create_jobs_analytics_mvws.ipynb
+        - notebook:
+            path: ../notebooks/databricks-iq-data/create_serverless_user_analytics_mvws.ipynb
+        - notebook:
+            path: ../notebooks/databricks-iq-data/create_serving_analytics_mvws.ipynb
+            

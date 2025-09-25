@@ -1,0 +1,10 @@
+fastmcp
+asyncio-extras
+uvicorn
+fastapi
+python-multipart
+pydantic
+typing-extensions
+databricks-sdk
+mcp[cli]
+requests

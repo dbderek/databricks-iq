@@ -1,0 +1,32 @@
+# Core Databricks and MLflow dependencies
+mlflow-skinny[databricks]>=2.11.0
+databricks-langchain>=0.1.0
+databricks-agents>=0.1.0
+databricks-connect>=15.0.0
+databricks-mcp>=0.1.0
+databricks-sdk>=0.20.0
+
+# LangGraph and LangChain dependencies
+langgraph==0.3.4
+langchain-core>=0.1.0
+langchain-community>=0.1.0
+
+# MCP (Model Context Protocol) dependencies
+mcp>=1.0.0
+
+# Async and utility dependencies
+nest-asyncio>=1.5.0
+pydantic>=2.0.0
+requests>=2.31.0
+
+# Additional Python standard library alternatives
+asyncio-tools>=0.1.0
+
+# Development and packaging tools
+uv>=0.1.0
+
+# Optional: For enhanced JSON handling
+orjson>=3.9.0
+
+# Optional: For better type checking
+typing-extensions>=4.5.0

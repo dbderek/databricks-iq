@@ -1,0 +1,20 @@
+resources:
+  jobs:
+    databricks-iq-data-refresh:
+      name: databricks-iq-data-refresh
+
+      # Run this job once an hour.
+      trigger:
+        periodic:
+          interval: 4
+          unit: HOURS
+
+      email_notifications:
+        on_failure:
+          - someone@example.com
+
+      tasks:
+        - task_key: refresh_pipeline
+          pipeline_task:
+            pipeline_id: ${resources.pipelines.databricks-iq-data.id}
+            

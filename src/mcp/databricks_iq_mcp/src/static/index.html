@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Databricks Tags MCP Server</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏷️ Databricks Tags MCP Server</h1>
+            <p>Comprehensive tag management for Databricks resources</p>
+            <div id="connectionStatus" class="status-indicator">
+                <span id="statusDot" class="status-dot"></span>
+                <span id="statusText">Checking connection...</span>
+            </div>
+        </header>
+
+        <main>
+            <!-- Navigation Tabs -->
+            <nav class="tabs">
+                <button class="tab-button active" data-tab="overview">Overview</button>
+                <button class="tab-button" data-tab="clusters">Clusters</button>
+                <button class="tab-button" data-tab="warehouses">Warehouses</button>
+                <button class="tab-button" data-tab="jobs">Jobs</button>
+                <button class="tab-button" data-tab="pipelines">Pipelines</button>
+                <button class="tab-button" data-tab="bulk">Bulk Operations</button>
+                <button class="tab-button" data-tab="compliance">Compliance</button>
+            </nav>
+
+            <!-- Overview Tab -->
+            <div id="overview" class="tab-content active">
+                <div class="grid">
+                    <div class="card">
+                        <h3>🖥️ Clusters</h3>
+                        <div class="metric">
+                            <span class="value" id="clusterCount">-</span>
+                            <span class="label">Total Clusters</span>
+                        </div>
+                        <button onclick="loadClusters()" class="btn btn-primary">Manage Tags</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🏬 Warehouses</h3>
+                        <div class="metric">
+                            <span class="value" id="warehouseCount">-</span>
+                            <span class="label">SQL Warehouses</span>
+                        </div>
+                        <button onclick="loadWarehouses()" class="btn btn-primary">Manage Tags</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>⚙️ Jobs</h3>
+                        <div class="metric">
+                            <span class="value" id="jobCount">-</span>
+                            <span class="label">Total Jobs</span>
+                        </div>
+                        <button onclick="loadJobs()" class="btn btn-primary">Manage Tags</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>🔄 Pipelines</h3>
+                        <div class="metric">
+                            <span class="value" id="pipelineCount">-</span>
+                            <span class="label">DLT Pipelines</span>
+                        </div>
+                        <button onclick="loadPipelines()" class="btn btn-primary">Manage Tags</button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>🎯 Quick Actions</h3>
+                    <div class="actions-grid">
+                        <button onclick="showBulkUpdate()" class="btn btn-secondary">
+                            📝 Bulk Update Tags
+                        </button>
+                        <button onclick="showTagSearch()" class="btn btn-secondary">
+                            🔍 Find by Tag
+                        </button>
+                        <button onclick="generateComplianceReport()" class="btn btn-secondary">
+                            📊 Compliance Report
+                        </button>
+                        <button onclick="checkServerStatus()" class="btn btn-secondary">
+                            ⚡ Server Status
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clusters Tab -->
+            <div id="clusters" class="tab-content">
+                <div class="card">
+                    <h3>🖥️ Cluster Tag Management</h3>
+                    <button onclick="loadClusters()" class="btn btn-primary">Refresh Clusters</button>
+                    <div id="clustersContainer">
+                        <p class="loading">Click "Refresh Clusters" to load cluster data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warehouses Tab -->
+            <div id="warehouses" class="tab-content">
+                <div class="card">
+                    <h3>🏬 SQL Warehouse Tag Management</h3>
+                    <button onclick="loadWarehouses()" class="btn btn-primary">Refresh Warehouses</button>
+                    <div id="warehousesContainer">
+                        <p class="loading">Click "Refresh Warehouses" to load warehouse data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs Tab -->
+            <div id="jobs" class="tab-content">
+                <div class="card">
+                    <h3>⚙️ Job Tag Management</h3>
+                    <button onclick="loadJobs()" class="btn btn-primary">Refresh Jobs</button>
+                    <div id="jobsContainer">
+                        <p class="loading">Click "Refresh Jobs" to load job data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pipelines Tab -->
+            <div id="pipelines" class="tab-content">
+                <div class="card">
+                    <h3>🔄 Pipeline Tag Management</h3>
+                    <button onclick="loadPipelines()" class="btn btn-primary">Refresh Pipelines</button>
+                    <div id="pipelinesContainer">
+                        <p class="loading">Click "Refresh Pipelines" to load pipeline data...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bulk Operations Tab -->
+            <div id="bulk" class="tab-content">
+                <div class="card">
+                    <h3>📝 Bulk Operations</h3>
+                    
+                    <div class="form-group">
+                        <label for="bulkTags">Tags to Apply (JSON format)</label>
+                        <textarea id="bulkTags" placeholder='{"environment": "production", "team": "data-eng"}' rows="3"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bulkOperation">Operation</label>
+                        <select id="bulkOperation">
+                            <option value="merge">Merge (add/update tags)</option>
+                            <option value="replace">Replace (replace all tags)</option>
+                            <option value="remove">Remove (remove specified tags)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bulkResources">Resources (JSON format)</label>
+                        <textarea id="bulkResources" placeholder='[{"type": "cluster", "id": "cluster-id"}, {"type": "job", "id": 123}]' rows="5"></textarea>
+                    </div>
+                    
+                    <button onclick="performBulkUpdate()" class="btn btn-primary">Apply Bulk Update</button>
+                    
+                    <div id="bulkResults"></div>
+                </div>
+
+                <div class="card">
+                    <h3>🔍 Find Resources by Tag</h3>
+                    
+                    <div class="form-group">
+                        <label for="searchTagKey">Tag Key</label>
+                        <input type="text" id="searchTagKey" placeholder="environment">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="searchTagValue">Tag Value (optional)</label>
+                        <input type="text" id="searchTagValue" placeholder="production">
+                    </div>
+                    
+                    <button onclick="searchByTag()" class="btn btn-primary">Search</button>
+                    
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+
+            <!-- Compliance Tab -->
+            <div id="compliance" class="tab-content">
+                <div class="card">
+                    <h3>📊 Tag Compliance Report</h3>
+                    
+                    <div class="form-group">
+                        <label for="requiredTags">Required Tags (comma-separated)</label>
+                        <input type="text" id="requiredTags" placeholder="environment,team,owner,cost-center" value="environment,team,owner">
+                    </div>
+                    
+                    <button onclick="generateComplianceReport()" class="btn btn-primary">Generate Report</button>
+                    
+                    <div id="complianceResults"></div>
+                </div>
+            </div>
+
+            <!-- Results Display -->
+            <div id="results" class="results-container">
+                <h3>Results</h3>
+                <pre id="resultsContent">Ready to execute tag management operations...</pre>
+            </div>
+        </main>
+    </div>
+
+    <!-- Tag Editor Modal -->
+    <div id="tagModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">Edit Tags</h3>
+                <span class="close" onclick="closeTagModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="tagEditor"></div>
+                <div class="form-group">
+                    <label>Add New Tag</label>
+                    <input type="text" id="newTagKey" placeholder="Key">
+                    <input type="text" id="newTagValue" placeholder="Value">
+                    <button onclick="addNewTag()" class="btn btn-secondary">Add</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button onclick="saveTagChanges()" class="btn btn-primary">Save Changes</button>
+                <button onclick="closeTagModal()" class="btn btn-secondary">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

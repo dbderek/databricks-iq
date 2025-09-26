@@ -1,0 +1,101 @@
+name,workspace_id,job_id,run_id,run_as,custom_tags,repairs,repair_list_cost,repair_effective_cost,repair_time_seconds
+[dev arun_wagle] document_result_polling_service,984752964297111,39502372833021,939294864905893,arun.wagle@databricks.com,"{""dev"":""arun_wagle"",""owner"":""kyle@databricks.com""}",20,35.002578,35.002578,
+ai_parse_trigger,984752964297111,453981388068119,539603651477133,,,18,,,75260.0
+task_stock_realtime_sql,984752964297111,262862392430951,947175153934833,,,17,,,14598.0
+task_sale_item_realtime_sql_specified_time,984752964297111,722450757399978,451179671196866,,,17,,,12716.0
+task_sale_item_realtime_sql_specified_time,984752964297111,722450757399978,554436382429903,,,16,,,2066.0
+Advanced MLOPS - Model Developement,984752964297111,224275487404906,240008334787181,,,14,,,
+[dev arun_wagle] document_processing_orchestrator,984752964297111,499362562510087,1057631892354476,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",14,7.920370,7.920370,15316.0
+archanah_demo_test-mlops_demo_project-realtime-inference-job,984752964297111,157232627972218,567860614021895,,,12,,,8687.0
+[dev james_parham] dev_framework_deployment,984752964297111,409643371468478,147701203498918,james.parham@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""james_parham""}",11,10.112666,10.112666,
+og_demo_workflow,984752964297111,1062763215176119,969539176551546,,,9,,,5454.0
+[dev yash_balar] lakehouse_smart_claims_de_job,984752964297111,63762476622026,1024057299955020,,,9,,,5636.0
+tpcdi_workflow_sricci,984752964297111,709559909248470,605112053911296,,,9,,,1668.0
+tws_switch_role,984752964297111,696684712819030,626191172061964,,,9,,,1134.0
+Flights_Pipeline_Final,361426925668745,976015641077884,418160933346410,,,8,,,229882.0
+Retail Data Gen,984752964297111,207220116386483,908104414245379,,,8,,,9440.0
+[dev hiroyuki_nakazato] task_sale_item_realtime,984752964297111,348701581571260,201542347430515,,,8,,,8822.0
+[dev arun_wagle] document_processing_orchestrator,984752964297111,499362562510087,1095084369579416,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",8,11.679080,11.679080,
+[constellation] Graph Representation,984752964297111,854841786736486,18057256858662,,,8,,,4607.0
+job-dlt-medallion-pipelines,984752964297111,886202091582603,885129460791479,,,8,,,876.0
+demo_fe_model_deploy_sa,984752964297111,968013498666738,213389499408964,salome.abekhe@databricks.com,"{""BU"":""Test"",""owner"":""kyle@databricks.com""}",8,0.045823,0.045823,1257.0
+[dev timo_roest] PBF Ingestion Demo,984752964297111,731529592913893,1099812648493873,,,8,,,55305.0
+[dev eli_swanson] dbxsolcat-elt,830292400663869,630546303523411,618510422549036,,,8,,,
+inventory_pipeline_20250413,984752964297111,253047524522431,957142816440344,,,7,,,10294.0
+MiFIRPOC_pinchu,984752964297111,180753283468830,818791759227269,,,7,,,11710.0
+task_sale_item_realtime_sql_specified_time,984752964297111,722450757399978,69646033370944,,,7,,,1612.0
+task_sale_item_realtime_specified_time,984752964297111,961951720197903,999566980156565,,,7,,,1172.0
+[dev eli_swanson] dbxsolcat-elt,830292400663869,630546303523411,502695443030453,,,7,,,
+ATT_MX_SHAREPOINT,984752964297111,395119403840134,970902732737732,,,7,,,2038.0
+foreach_mock,984752964297111,630258229749165,276806698481585,,,7,,,1194.0
+stock_forecasting_deployment_job,984752964297111,897495508746092,295115994181548,ralph.laite@databricks.com,"{""owner"":""kyle@databricks.com""}",7,0.796355,0.796355,2165.0
+inventory_pipeline_20250413,984752964297111,253047524522431,553489059487565,,,6,,,
+[dev arun_wagle] document_processing_orchestrator,984752964297111,499362562510087,151881094595666,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",6,7.846896,7.846896,2002.0
+[dev hiroyuki_nakazato] task_stock_realtime,984752964297111,520633272788135,23551874909379,,,6,,,
+[dev arun_wagle] document_conversion_service,984752964297111,387855862362310,87342134782399,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",6,8.071224,8.071224,2111.0
+dbdemos_mlops_end2end_init_adrien_thomas,984752964297111,1122881303504694,622163500372679,,,6,,,
+Retail Data Gen,984752964297111,207220116386483,94652054008414,,,6,,,182108.0
+[dev arun_wagle] document_processing_orchestrator,984752964297111,513755835128496,938431505915247,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",6,2.446635,2.446635,3409.0
+[dev arun_wagle] document_processing_spark_workflow_development,984752964297111,727109011727176,1039023730193722,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",6,1.309196,1.309196,
+demo_fe_model_deploy_sa,984752964297111,968013498666738,512053687519493,9645190f-c70a-47f8-a6c7-464ba55586aa,"{""owner"":""kyle@databricks.com""}",6,0.298999,0.298999,4728.0
+dbdemos_data_intelligence_platform_iot_turbine_init_amine_charifi,984752964297111,236821307822935,961265337895488,,,5,,,
+[dev james_parham] dev_framework_deployment,984752964297111,409643371468478,1123006810110292,james.parham@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""james_parham""}",5,2.832914,2.832914,
+EngagementUpdate,984752964297111,459416441562004,1030728270532048,,,5,,,56330.0
+MaskedFrameParallel,830292400663869,182097986737539,1055985852073645,,,5,,,3415.0
+[dev arun_wagle] document_submission_service,984752964297111,1053039548128231,665718913735302,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",5,0.824550,0.824550,1237.0
+bir_job_metric_test,984752964297111,1125700620225359,666327708019485,,,5,,,853.0
+Min-Fang-TPCDI-SF10-DBSQL,984752964297111,21028250390685,399239316720171,,,5,,,1188.0
+dbdemos_data_intelligence_platform_iot_turbine_init_evandro_muchinski,984752964297111,302362852900633,194995928773474,,,5,,,
+🥤Pepsi Demo - E2E ML Workflow,984752964297111,520545748342320,660674052584553,,,5,,,1131.0
+Azure OpenAI - Pickle and MLflow,984752964297111,542230649784971,250832768156180,,,5,,,2659.0
+sql_migration_code_transformation,984752964297111,617108468248758,373337545105760,,,5,,,5441.0
+Workflows_example_job_1,984752964297111,624246227473116,803111585693494,,,5,,,
+[dev avdhesh_sachdeva] stored_procedures_deployment_job,984752964297111,643362180583294,538724232767213,,,5,,,
+dbdemos_lakehouse_retail_c360_init_maucaro_demo_dbdemos_retail_c360_mau,984752964297111,1042327809268893,1118109821220874,,,5,,,2505.0
+dbdemos_lakehouse_hls_patient_init_mobeen_vaid,984752964297111,300090197375054,490647836936771,,,5,,,2455.0
+gergo_big_csv_test,984752964297111,332740736567616,1014647293202725,,,5,,,1263.0
+demos_dlt_loans_init_shidong_zhang,984752964297111,548888182986465,770753004296336,,,5,,,
+Simulate_TTA_Task first run,984752964297111,666118357574004,467236263484614,,,5,,,
+[dev arun_wagle] document_submission_service_development,984752964297111,726076816675833,272491719555871,arun.wagle@databricks.com,"{""dev"":""arun_wagle"",""owner"":""kyle@databricks.com""}",5,0.635624,0.635624,
+[dev arun_wagle] document_submission_service_development,984752964297111,726076816675833,818261595321711,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",5,2.229702,2.229702,
+[dev arun_wagle] document_processing_spark_workflow_development,984752964297111,727109011727176,1034266217561254,arun.wagle@databricks.com,"{""workflow"":""true"",""project"":""document_processing"",""version"":""1.0.0"",""implementation"":""spark"",""dev"":""arun_wagle"",""environment"":""development"",""owner"":""kyle@databricks.com""}",5,2.488528,2.488528,
+,984752964297111,900230515531387,237069986929001,,,5,,,
+new_vizio_training_pipeline,984752964297111,963685017069866,797042185594051,,,5,,,171668.0
+Job Style Batch Image Ingest and Read,3438839487639471,270010142528193,359119493382077,,,4,,,2060.0
+Workflows_example_job_2,984752964297111,1026026709925253,571327528217359,,,4,,,
+sql_migration_code_transformation,984752964297111,152029862134737,614975409946016,,,4,,,
+agentic-order-management-amzn,984752964297111,32634583636165,545054776200682,,,4,,,
+[dev arun_wagle] document_submission_service,984752964297111,492297766684101,329966583616259,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",4,1.509104,1.509104,894.0
+retai_ai_agent_example,984752964297111,581232541325847,380807232082992,,,4,,,
+sj-restart,984752964297111,631266718706453,1014483915976687,,,4,,,1116.0
+my first data pipeline,984752964297111,701646380141141,126781413201727,,,4,,,608.0
+task_sale_item_realtime_sql_specified_time,984752964297111,722450757399978,288753704043884,,,4,,,992.0
+zingg,984752964297111,765314381454876,637774140966156,,,4,,,
+archanah_demo_test-mlops_demo_project-batch-inference-job,984752964297111,782459012644058,1015418547349003,,,4,,,22973.0
+[dev kiara_koeppen] automl_baseline_job,984752964297111,82124285623841,998862103527365,,,4,,,
+iw_49_n_ingestion,361426925668745,66719621626758,1013668194468028,,,4,,,
+dbdemos_data_intelligence_platform_iot_turbine_init_ben_mumma,984752964297111,221655335385884,460224167584288,,,4,,,
+deploy-retail-ai-job,984752964297111,477423071611531,798147707982536,,,4,,,1570.0
+mlflow3_deploy,984752964297111,650150040058129,317109493090036,sunny.singh@databricks.com,"{""owner"":""kyle@databricks.com""}",4,0.285940,0.285940,1452.0
+[dev mehdi_modarressi] run_dlt_pipelines,984752964297111,706918455207220,151588132340315,,,4,,,1112.0
+dbdemos_data_intelligence_platform_iot_turbine_init_amine_charifi,984752964297111,792403868730152,1083854055962508,,,4,,,3182.0
+Salesforce_product_ETL,984752964297111,895101671056709,413526609395434,,,4,,,808.0
+[dev eli_swanson] dev-pii_ner-model-training-job,830292400663869,605535663164394,404273314142194,,,4,,,
+dbdemos_lakehouse_retail_c360_init_brlui_retail_c360,984752964297111,1006166556582311,33604651992683,,,4,,,5904.0
+dbdemos_lakehouse_fsi_credit_seifeddine_saafi,984752964297111,1070208038940218,954545534743106,,,4,,,
+dbdemos_lakehouse_retail_c360_init_douglas_s_m0pf_da_dbdemos_retail_c360,984752964297111,271039869804271,522421018751280,,,4,,,9413.0
+[dev arun_wagle] document_submission_service,984752964297111,30331705353775,1086018360326773,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",4,0.736460,0.736460,1094.0
+Ray Multi-Model Inference,984752964297111,343252069615303,886941182818484,,,4,,,
+[dev arun_wagle] document_result_polling_service,984752964297111,351053597104334,478874236642990,arun.wagle@databricks.com,"{""dev"":""arun_wagle"",""owner"":""kyle@databricks.com""}",4,0.442266,0.442266,1231.0
+[dev arun_wagle] document_conversion_service,984752964297111,387855862362310,838600897335123,arun.wagle@databricks.com,"{""owner"":""kyle@databricks.com"",""dev"":""arun_wagle""}",4,6.406459,6.406459,
+arjun_jeyapaalan_hls_sql_workshop,984752964297111,528835463670997,1009673538077966,,,4,,,59112.0
+[dev shidong_zhang] Iris Model Deployment Job - dev,984752964297111,538707051546317,60815269262591,,,4,,,775.0
+sql_migration_code_transformation,984752964297111,620492258101578,634543494619502,,,4,,,
+mlflow3_deploy,984752964297111,650150040058129,89396420456718,sunny.singh@databricks.com,"{""owner"":""kyle@databricks.com""}",4,0.290269,0.290269,
+Spark+AI_GenAI_Demo,984752964297111,962994323701150,57100224456021,,,4,,,
+dbdemos_lakehouse_fsi_smart_claims_david_thomas,361426925668745,705051052683593,1086339975487618,,,3,,,157633.0
+demos_dlt_loans_init_chiju_wu_python,984752964297111,244514148514027,553771329128141,,,3,,,2296.0
+task_stock_realtime_sql,984752964297111,262862392430951,486428546914722,,,3,,,
+Compare UC vs Non-UC Reads (14.3 LTS Custom),984752964297111,36072870970986,269042020579566,,,3,,,
+Senthilkumar-Subramanian-TPCDI-SF10-DBSQL,984752964297111,42852040375012,411257412135032,,,3,,,486.0
+MLOPS,984752964297111,444352756550887,206766361917808,,,3,,,357.0

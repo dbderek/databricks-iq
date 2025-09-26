@@ -456,7 +456,7 @@ def display_predefined_prompts():
     cols = st.columns(2)
     for i, prompt in enumerate(prompts):
         with cols[i % 2]:
-            if st.button(prompt, key=f"prompt_{i}", use_container_width=True):
+            if st.button(prompt, key=f"prompt_{i}", width="stretch"):
                 return prompt
     return None
 
@@ -549,7 +549,7 @@ def show(data: Dict[str, Any]):
         st.markdown("---")
         st.markdown("### 🛠️ Chat Controls")
         
-        if st.button("🗑️ Clear Chat", use_container_width=True):
+        if st.button("🗑️ Clear Chat", width="stretch"):
             st.session_state.history = []
             st.rerun()
         

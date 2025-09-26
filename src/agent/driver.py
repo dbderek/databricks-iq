@@ -30,10 +30,12 @@ import os
 # # Set your Databricks client ID and client secret for service principal authentication.
 DATABRICKS_CLIENT_ID = sp_client_id
 DATABRICKS_CLIENT_SECRET = dbutils.secrets.get(scope=sp_secret_scope, key=sp_secret_key)
+DATABRICKS_MCP_SERVER_URL = "https://<your-databricks-apps-instance>/mcp"
 
 # # Load your service principal credentials into environment variables
 os.environ["DATABRICKS_CLIENT_ID"] = DATABRICKS_CLIENT_ID
 os.environ["DATABRICKS_CLIENT_SECRET"] = DATABRICKS_CLIENT_SECRET
+os.environ["DATABRICKS_MCP_SERVER_URL"] = DATABRICKS_MCP_SERVER_URL
 
 
 # COMMAND ----------
@@ -111,7 +113,8 @@ agents.deploy(
     uc_registered_model_info.version,
     environment_vars={
     "DATABRICKS_CLIENT_ID": os.environ["DATABRICKS_CLIENT_ID"],
-    "DATABRICKS_CLIENT_SECRET": os.environ["DATABRICKS_CLIENT_SECRET"]
+    "DATABRICKS_CLIENT_SECRET": os.environ["DATABRICKS_CLIENT_SECRET"],
+    "DATABRICKS_MCP_SERVER_URL": os.environ["DATABRICKS_MCP_SERVER_URL"]
     },
     tags = {"endpointSource": "docs"},
     endpoint_name='dbx-iq-agent-endpoint'

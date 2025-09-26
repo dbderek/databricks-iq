@@ -34,7 +34,11 @@ targets:
     variables:
       catalog: databricksiq
       schema: main
-      dbsql_serverless_warehouse_id: aaba42c163156b19
+      service_principal_name: databricks-iq-sp
+      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
+      sp_secret_scope: databricksiq
+      sp_secret_key: databricks-iq-sp
+      dbsql_serverless_warehouse_id: 8baced1ff014912d
 
   deve2:
     mode: development
@@ -80,3 +84,4 @@ targets:
       sp_secret_scope: databricksiq
       sp_secret_key: databricks-iq-sp
       dbsql_serverless_warehouse_id: 148ccb90800933a1
+      

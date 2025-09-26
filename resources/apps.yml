@@ -25,5 +25,5 @@ resources:
             permission: "CAN_MANAGE"
             
       permissions:
-        - service_principal_name: "databricks-iq-mcp-sp"
+        - service_principal_name: ${var.service_principal_name}
           level: "CAN_USE"

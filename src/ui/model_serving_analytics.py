@@ -33,9 +33,15 @@ def show_model_serving_costs():
     """Show model serving costs analysis"""
     st.subheader("🚀 Model Serving Costs")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    serving_data = load_data('model_serving_costs.csv')
+    serving_data = load_data('model_serving_costs.csv',
+                            use_live_data=config['use_live_data'], 
+                            http_path=config['http_path'])
     if serving_data.empty:
+        st.warning("No model serving costs data available")
         return
     
     # Create filters
@@ -186,8 +192,13 @@ def show_batch_inference_costs():
     """Show batch inference costs analysis"""
     st.subheader("⚡ Batch Inference Costs")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    batch_data = load_data('batch_inference_costs.csv')
+    batch_data = load_data('batch_inference_costs.csv',
+                          use_live_data=config['use_live_data'], 
+                          http_path=config['http_path'])
     if batch_data.empty:
         st.warning("No batch inference costs data available")
         return

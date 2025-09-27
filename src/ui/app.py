@@ -280,21 +280,143 @@ def main():
     
     # Add some info in sidebar
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📈 Quick Stats")
-    st.sidebar.info("Navigate between different analytics pages to explore your Databricks costs and usage patterns.")
+    st.sidebar.markdown("### 📈 Data Source Info")
+    
+    # Display current data source information
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
+    try:
+        from utils import get_data_source_info
+        source_info = get_data_source_info(config['use_live_data'], config['http_path'])
+        
+        if source_info['source'] == 'Databricks SQL':
+            st.sidebar.success(f"🔗 **Connected to Databricks SQL**")
+            st.sidebar.info(f"""
+            **Details:**
+            - Catalog: `{source_info['catalog']}`
+            - Schema: `{source_info['schema']}`
+            - Warehouse: `{source_info['warehouse_id']}`
+            """)
+        else:
+            st.sidebar.info(f"📁 **Using {source_info['source']}**")
+            st.sidebar.caption(f"Location: {source_info.get('location', 'N/A')}")
+            
+    except Exception:
+        # Fallback if utils import fails
+        if config['use_live_data']:
+            st.sidebar.success("🔗 **Databricks SQL** (configured)")
+        else:
+            st.sidebar.info("📁 **CSV Files** (example data)")
+    
+    st.sidebar.markdown("Navigate between different analytics pages to explore your Databricks costs and usage patterns.")
     
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🔧 Settings")
+    st.sidebar.markdown("### 🔧 Data Source Configuration")
     
-    # Data source toggle (for future implementation)
+    # Data source toggle
     data_source = st.sidebar.selectbox(
         "Data Source",
         ["Example Data", "Live Databricks SQL"],
         help="Switch between example data and live Databricks SQL queries"
     )
     
+    # Initialize session state for data source settings
+    if 'use_live_data' not in st.session_state:
+        st.session_state.use_live_data = False
+    
+    use_live_data = False
+    http_path = None
+    
     if data_source == "Live Databricks SQL":
-        st.sidebar.warning("Live Databricks SQL integration is not yet implemented. Using example data.")
+        st.session_state.use_live_data = True
+        
+        # Check if SQL_WAREHOUSE environment variable is set
+        import os
+        sql_warehouse = os.getenv('SQL_WAREHOUSE')
+        
+        if sql_warehouse:
+            st.sidebar.success(f"✅ SQL Warehouse: {sql_warehouse}")
+            st.sidebar.info("Using SQL_WAREHOUSE environment variable")
+        else:
+            st.sidebar.error("❌ SQL_WAREHOUSE environment variable not set")
+            st.sidebar.markdown("""
+            **Setup Required:**
+            Set the SQL_WAREHOUSE environment variable:
+            ```bash
+            export SQL_WAREHOUSE=your_warehouse_id
+            ```
+            """)
+        
+        use_live_data = True
+        
+        # Test connection button if SQL warehouse is configured
+        if sql_warehouse:
+            if st.sidebar.button("🔍 Test Connection"):
+                try:
+                    from databricks_client import get_databricks_client
+                    from config import DATA_CONFIG
+                    
+                    client = get_databricks_client(
+                        catalog=DATA_CONFIG["databricks"]["catalog"],
+                        schema=DATA_CONFIG["databricks"]["schema"]
+                    )
+                    
+                    with st.spinner("Testing connection..."):
+                        if client.test_connection():
+                            st.sidebar.success("✅ Connection successful!")
+                            
+                            # Get warehouse info
+                            warehouse_info = client.get_warehouse_info()
+                            if warehouse_info:
+                                st.sidebar.info(f"""
+                                **Connection Details:**
+                                - Catalog: `{warehouse_info['catalog']}`
+                                - Schema: `{warehouse_info['schema']}`
+                                - Warehouse ID: `{warehouse_info['warehouse_id']}`
+                                - Host: `{warehouse_info.get('host', 'N/A')}`
+                                """)
+                        else:
+                            st.sidebar.error("❌ Connection failed!")
+                            
+                except ImportError:
+                    st.sidebar.error("❌ Databricks client not available. Please install required dependencies.")
+                except Exception as e:
+                    st.sidebar.error(f"❌ Connection test failed: {str(e)}")
+            
+            # List available tables
+            if st.sidebar.button("📋 List Available Tables"):
+                try:
+                    from databricks_client import get_databricks_client
+                    from config import DATA_CONFIG
+                    
+                    client = get_databricks_client(
+                        catalog=DATA_CONFIG["databricks"]["catalog"],
+                        schema=DATA_CONFIG["databricks"]["schema"]
+                    )
+                    
+                    with st.spinner("Fetching table list..."):
+                        tables = client.list_tables()
+                        if tables:
+                            st.sidebar.success(f"✅ Found {len(tables)} tables:")
+                            for table in sorted(tables):
+                                st.sidebar.write(f"• {table}")
+                        else:
+                            st.sidebar.warning("⚠️ No tables found or unable to fetch table list")
+                            
+                except Exception as e:
+                    st.sidebar.error(f"❌ Failed to list tables: {str(e)}")
+        else:
+            st.sidebar.info("💡 Set SQL_WAREHOUSE environment variable to enable live data connection")
+    
+    else:
+        st.session_state.use_live_data = False
+        st.sidebar.info("📁 Using static example data from CSV files")
+    
+    # Store connection settings in session state for use by analytics pages
+    st.session_state.data_source_config = {
+        'use_live_data': use_live_data,
+        'http_path': http_path
+    }
     
     # Show selected page
     page_key = pages[selected_page]

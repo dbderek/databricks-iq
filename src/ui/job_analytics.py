@@ -41,9 +41,15 @@ def show_most_expensive_jobs():
     """Show analysis of most expensive jobs"""
     st.subheader("🏆 Most Expensive Jobs")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    jobs_data = load_data('most_expensive_jobs.csv')
+    jobs_data = load_data('most_expensive_jobs.csv', 
+                         use_live_data=config['use_live_data'], 
+                         http_path=config['http_path'])
     if jobs_data.empty:
+        st.warning("No data available for most expensive jobs")
         return
     
     # Create filters
@@ -176,9 +182,15 @@ def show_most_expensive_job_runs():
     """Show analysis of most expensive job runs"""
     st.subheader("🏃 Most Expensive Job Runs")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    runs_data = load_data('most_expensive_job_runs.csv')
+    runs_data = load_data('most_expensive_job_runs.csv',
+                         use_live_data=config['use_live_data'], 
+                         http_path=config['http_path'])
     if runs_data.empty:
+        st.warning("No data available for most expensive job runs")
         return
     
     # Create filters
@@ -322,8 +334,13 @@ def show_job_spend_trends():
     """Show job spending trends over time"""
     st.subheader("📈 Job Spend Trends")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    trend_data = load_data('job_spend_trend.csv')
+    trend_data = load_data('job_spend_trend.csv',
+                          use_live_data=config['use_live_data'], 
+                          http_path=config['http_path'])
     if trend_data.empty:
         st.warning("No job spend trend data available")
         return
@@ -406,8 +423,13 @@ def show_failed_jobs_analysis():
     """Show failed jobs analysis"""
     st.subheader("❌ Failed Jobs Analysis")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    failed_data = load_data('failed_jobs_analysis.csv')
+    failed_data = load_data('failed_jobs_analysis.csv',
+                           use_live_data=config['use_live_data'], 
+                           http_path=config['http_path'])
     if failed_data.empty:
         st.warning("No failed jobs analysis data available")
         return

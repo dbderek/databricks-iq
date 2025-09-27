@@ -9,6 +9,7 @@ import json
 import warnings
 from pathlib import Path
 from datetime import datetime, timedelta
+from typing import Optional, Dict, Any
 
 # Suppress warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -20,7 +21,26 @@ alt.data_transformers.disable_max_rows()
 # Databricks color palette
 DATABRICKS_COLORS = ['#FF3621', '#00A1F1', '#7C4DFF', '#00D4AA', '#FF8A00', '#E91E63', '#9C27B0', '#673AB7']
 
-def load_data(filename: str) -> pd.DataFrame:
+def load_data(filename: str, use_live_data: bool = False, http_path: Optional[str] = None, 
+              filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+    """
+    Load data from either CSV files or live Databricks SQL
+    
+    Args:
+        filename: Name of the CSV file or table
+        use_live_data: Whether to use live Databricks SQL or CSV files
+        http_path: HTTP path to Databricks SQL warehouse (optional, uses env var if not provided)
+        filters: Optional filters to apply to the query
+    
+    Returns:
+        pandas DataFrame with the data
+    """
+    if use_live_data:
+        return load_live_data(filename, http_path, filters)
+    else:
+        return load_csv_data(filename)
+
+def load_csv_data(filename: str) -> pd.DataFrame:
     """Load CSV data from the example_data directory"""
     try:
         data_path = Path(__file__).parent / 'example_data' / filename
@@ -32,6 +52,93 @@ def load_data(filename: str) -> pd.DataFrame:
     except Exception as e:
         st.error(f"Error loading {filename}: {str(e)}")
         return pd.DataFrame()
+
+def load_live_data(filename: str, http_path: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+    """
+    Load data from live Databricks SQL
+    
+    Args:
+        filename: CSV filename to convert to table name
+        http_path: HTTP path to Databricks SQL warehouse (optional, uses env var if not provided)
+        filters: Optional filters to apply
+    
+    Returns:
+        pandas DataFrame with the data, falls back to CSV if SQL fails
+    """
+    try:
+        from databricks_client import get_databricks_client, get_table_name_from_filename
+        from config import DATA_CONFIG
+        
+        # Get Databricks client
+        client = get_databricks_client(
+            catalog=DATA_CONFIG["databricks"]["catalog"],
+            schema=DATA_CONFIG["databricks"]["schema"]
+        )
+        
+        # Convert filename to table name
+        table_name = get_table_name_from_filename(filename)
+        
+        # Query the data
+        df = client.query_table(
+            table_name=table_name,
+            http_path=http_path,
+            limit=DATA_CONFIG["databricks"]["max_rows"],
+            filters=filters
+        )
+        
+        if df is not None and not df.empty:
+            st.success(f"✅ Loaded {len(df)} rows from Databricks SQL table: {table_name}")
+            return df
+        else:
+            st.warning(f"⚠️ No data returned from SQL table {table_name}, falling back to CSV")
+            return load_csv_data(filename)
+            
+    except ImportError:
+        st.warning("⚠️ Databricks client not available, using CSV data")
+        return load_csv_data(filename)
+    except Exception as e:
+        st.error(f"❌ Error loading from Databricks SQL: {str(e)}")
+        st.info("📁 Falling back to CSV data")
+        return load_csv_data(filename)
+
+def get_data_source_info(use_live_data: bool, http_path: Optional[str] = None) -> Dict[str, str]:
+    """
+    Get information about the current data source
+    
+    Args:
+        use_live_data: Whether using live data
+        http_path: HTTP path if using live data (optional, uses env var if not provided)
+    
+    Returns:
+        Dictionary with data source information
+    """
+    if use_live_data:
+        try:
+            from databricks_client import get_databricks_client
+            from config import DATA_CONFIG
+            
+            client = get_databricks_client(
+                catalog=DATA_CONFIG["databricks"]["catalog"],
+                schema=DATA_CONFIG["databricks"]["schema"]
+            )
+            
+            warehouse_info = client.get_warehouse_info(http_path)
+            if warehouse_info:
+                return {
+                    "source": "Databricks SQL",
+                    "catalog": warehouse_info["catalog"],
+                    "schema": warehouse_info["schema"],
+                    "warehouse_id": warehouse_info["warehouse_id"],
+                    "host": warehouse_info.get("host", "N/A")
+                }
+        except Exception:
+            pass
+    
+    return {
+        "source": "CSV Files",
+        "location": "example_data/",
+        "type": "Static sample data"
+    }
 
 def parse_tags(tags_str):
     """Parse custom tags JSON string into a readable format"""

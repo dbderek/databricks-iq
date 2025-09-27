@@ -1,5 +1,8 @@
-databricks bundle deploy -t dev
-databricks bundle run ui -t dev &
-databricks bundle run mcp -t dev &
-databricks bundle run databricks_iq_data_refresh -t dev &
-databricks bundle run agent_driver -t dev &
+
+TARGET=${1:-dev}
+
+databricks bundle deploy -t $TARGET
+databricks bundle run ui -t $TARGET &
+databricks bundle run mcp -t $TARGET &
+databricks bundle run databricks-iq-data-refresh -t $TARGET &
+databricks bundle run databricks-iq-create-agent -t $TARGET &

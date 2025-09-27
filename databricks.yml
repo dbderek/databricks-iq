@@ -27,7 +27,7 @@ variables:
 targets:
   dev:
     mode: development
-    default: true
+    default: false
     workspace:
       host: https://fe-vm-buzzforce-demo-workspace.cloud.databricks.com/
       root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
@@ -42,7 +42,7 @@ targets:
 
   deve2:
     mode: development
-    default: true
+    default: false
     workspace:
       host: https://e2-demo-field-eng.cloud.databricks.com/
       root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
@@ -65,9 +65,9 @@ targets:
       catalog: databricksiq
       schema: main
       service_principal_name: databricks-iq-mcp-sp
-      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
+      sp_client_id: 3ab2519b-2bda-448d-bfd0-446712f69bf2
       sp_secret_scope: databricksiq
-      sp_secret_key: databricks-iq-mcp-sp
+      sp_secret_key: databricks-iq-sp
       dbsql_serverless_warehouse_id: 148ccb90800933a1
       
   prod:

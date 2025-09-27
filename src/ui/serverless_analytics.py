@@ -36,9 +36,15 @@ def show_serverless_job_spend():
     """Show serverless job spending analysis"""
     st.subheader("💼 Serverless Job Spend")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    job_data = load_data('serverless_job_spend.csv')
+    job_data = load_data('serverless_job_spend.csv',
+                        use_live_data=config['use_live_data'], 
+                        http_path=config['http_path'])
     if job_data.empty:
+        st.warning("No serverless job spend data available")
         return
     
     # Display metrics cards
@@ -87,9 +93,15 @@ def show_serverless_notebook_spend():
     """Show serverless notebook spending analysis"""
     st.subheader("📓 Serverless Notebook Spend")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    notebook_data = load_data('serverless_notebook_spend.csv')
+    notebook_data = load_data('serverless_notebook_spend.csv',
+                             use_live_data=config['use_live_data'], 
+                             http_path=config['http_path'])
     if notebook_data.empty:
+        st.warning("No serverless notebook spend data available")
         return
     
     # Display metrics cards
@@ -134,9 +146,15 @@ def show_serverless_consumption_by_tag():
     """Show serverless consumption analysis by tags"""
     st.subheader("🏷️ Consumption by Tag")
     
+    # Get data source configuration from session state
+    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    
     # Load data
-    tag_data = load_data('serverless_consumption_by_tag.csv')
+    tag_data = load_data('serverless_consumption_by_tag.csv',
+                        use_live_data=config['use_live_data'], 
+                        http_path=config['http_path'])
     if tag_data.empty:
+        st.warning("No serverless consumption by tag data available")
         return
     
     # Tag filter

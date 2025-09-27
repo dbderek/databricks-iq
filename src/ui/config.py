@@ -55,6 +55,16 @@ DATA_CONFIG = {
     # Example data directory (relative to project root)
     "example_data_dir": "example_data",
     
+    # Databricks SQL configuration
+    "databricks": {
+        "catalog": "databricksiq",
+        "schema": "main",
+        "warehouse_id_env": "SQL_WAREHOUSE",  # Environment variable name
+        "query_timeout": 30,
+        "max_rows": 10000,
+        "cache_ttl": 300  # 5 minutes
+    },
+    
     # Cache configuration
     "cache_ttl": 300,  # 5 minutes
     

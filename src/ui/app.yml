@@ -2,3 +2,5 @@ command: ['streamlit', 'run', 'app.py']
 env:
   - name: SERVING_ENDPOINT
     value: dbx-iq-agent-endpoint
+  - name: SQL_WAREHOUSE
+    valueFrom: "sql-warehouse"

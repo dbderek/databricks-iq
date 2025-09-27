@@ -7,7 +7,7 @@ resources:
 
       # The resources which this app should have access to
       resources:
-        - name: "yml-specified-warehouse"
+        - name: "sql-warehouse"
           sql_warehouse: # resource key
             id: ${var.dbsql_serverless_warehouse_id}
             permission: "CAN_MANAGE"
@@ -19,7 +19,7 @@ resources:
 
       # The resources which this app should have access to
       resources:
-        - name: "yml-specified-warehouse"
+        - name: "sql-warehouse"
           sql_warehouse: # resource key
             id: ${var.dbsql_serverless_warehouse_id}
             permission: "CAN_MANAGE"

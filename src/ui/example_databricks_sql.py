@@ -14,7 +14,7 @@ def get_connection(http_path):
 
 def read_table(table_name, conn):
     with conn.cursor() as cursor:
-        query = f"SELECT * FROM {table_name} LIMIT 100"
+        query = f"SELECT * FROM catalog.schema.{table_name}"
         cursor.execute(query)
         return cursor.fetchall_arrow().to_pandas()
 

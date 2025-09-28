@@ -49,12 +49,6 @@ CHART_COLORS = {
 
 # Data Configuration
 DATA_CONFIG = {
-    # Default data source
-    "default_source": "example",  # "example" or "live"
-    
-    # Example data directory (relative to project root)
-    "example_data_dir": "example_data",
-    
     # Databricks SQL configuration
     "databricks": {
         "catalog": "databricksiq",

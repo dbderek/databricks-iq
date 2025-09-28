@@ -7,7 +7,6 @@ import pandas as pd
 import altair as alt
 import json
 import warnings
-from pathlib import Path
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
@@ -21,52 +20,106 @@ alt.data_transformers.disable_max_rows()
 # Databricks color palette
 DATABRICKS_COLORS = ['#FF3621', '#00A1F1', '#7C4DFF', '#00D4AA', '#FF8A00', '#E91E63', '#9C27B0', '#673AB7']
 
-def load_data(filename: str, use_live_data: bool = False, http_path: Optional[str] = None, 
+def safe_nlargest(df: pd.DataFrame, n: int, column: str) -> pd.DataFrame:
+    """
+    Safely get n largest values, handling dtype issues
+    """
+    if df.empty or column not in df.columns:
+        return df
+    
+    try:
+        # Ensure the column is numeric
+        if df[column].dtype == 'object':
+            df[column] = pd.to_numeric(df[column], errors='coerce')
+        
+        return df.nlargest(n, column)
+    except Exception:
+        # If nlargest fails, sort manually
+        try:
+            return df.sort_values(column, ascending=False).head(n)
+        except Exception:
+            return df.head(n)
+
+def convert_numeric_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Convert numeric columns from object/string dtype to proper numeric types
+    This is especially important when loading data from Databricks SQL
+    """
+    if df.empty:
+        return df
+    
+    df = df.copy()
+    
+    # Define columns that should be numeric based on common patterns
+    numeric_patterns = [
+        'cost', 'price', 'amount', 'total', 'sum', 'count', 'runs', 
+        'duration', 'time', 'size', 'bytes', 'mb', 'gb', 'cpu', 'memory',
+        'effective', 'spend', 'billing', 'usage', 'hours'
+    ]
+    
+    for column in df.columns:
+        # Skip if already numeric
+        if pd.api.types.is_numeric_dtype(df[column]):
+            continue
+            
+        # Check if column name suggests it should be numeric
+        if any(pattern in column.lower() for pattern in numeric_patterns):
+            try:
+                # Try to convert to numeric, coercing errors to NaN
+                df[column] = pd.to_numeric(df[column], errors='coerce')
+            except Exception:
+                # If conversion fails, leave as is
+                continue
+        
+        # Also check for columns that look like they contain numeric data
+        elif df[column].dtype == 'object':
+            try:
+                # Sample a few non-null values to see if they're numeric strings
+                sample = df[column].dropna().head(5)
+                if not sample.empty:
+                    # Try converting sample to check if it's numeric data stored as strings
+                    test_conversion = pd.to_numeric(sample, errors='coerce')
+                    if test_conversion.notna().all():
+                        # If all sample values convert successfully, convert the whole column
+                        df[column] = pd.to_numeric(df[column], errors='coerce')
+            except Exception:
+                continue
+    
+    return df
+
+def load_data(table_name: str, http_path: Optional[str] = None, 
               filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
     """
-    Load data from either CSV files or live Databricks SQL
+    Load data from live Databricks SQL
     
     Args:
-        filename: Name of the CSV file or table
-        use_live_data: Whether to use live Databricks SQL or CSV files
+        table_name: Name of the SQL table
         http_path: HTTP path to Databricks SQL warehouse (optional, uses env var if not provided)
         filters: Optional filters to apply to the query
     
     Returns:
         pandas DataFrame with the data
     """
-    if use_live_data:
-        return load_live_data(filename, http_path, filters)
-    else:
-        return load_csv_data(filename)
+    df = load_live_data(table_name, http_path, filters)
+    
+    # Convert numeric columns to proper dtypes
+    df = convert_numeric_columns(df)
+    return df
 
-def load_csv_data(filename: str) -> pd.DataFrame:
-    """Load CSV data from the example_data directory"""
-    try:
-        data_path = Path(__file__).parent / 'example_data' / filename
-        df = pd.read_csv(data_path)
-        return df
-    except FileNotFoundError:
-        st.error(f"Could not find data file: {filename}")
-        return pd.DataFrame()
-    except Exception as e:
-        st.error(f"Error loading {filename}: {str(e)}")
-        return pd.DataFrame()
-
-def load_live_data(filename: str, http_path: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
+def load_live_data(table_name: str, http_path: Optional[str] = None, filters: Optional[Dict[str, Any]] = None) -> pd.DataFrame:
     """
     Load data from live Databricks SQL
     
     Args:
-        filename: CSV filename to convert to table name
+        table_name: Name of the SQL table
         http_path: HTTP path to Databricks SQL warehouse (optional, uses env var if not provided)
         filters: Optional filters to apply
     
     Returns:
-        pandas DataFrame with the data, falls back to CSV if SQL fails
+        pandas DataFrame with the data
     """
     try:
-        from databricks_client import get_databricks_client, get_table_name_from_filename
+        from databricks_client import get_databricks_client
         from config import DATA_CONFIG
         
         # Get Databricks client
@@ -75,10 +128,7 @@ def load_live_data(filename: str, http_path: Optional[str] = None, filters: Opti
             schema=DATA_CONFIG["databricks"]["schema"]
         )
         
-        # Convert filename to table name
-        table_name = get_table_name_from_filename(filename)
-        
-        # Query the data
+        # Query the data directly using table name
         df = client.query_table(
             table_name=table_name,
             http_path=http_path,
@@ -90,60 +140,86 @@ def load_live_data(filename: str, http_path: Optional[str] = None, filters: Opti
             st.success(f"✅ Loaded {len(df)} rows from Databricks SQL table: {table_name}")
             return df
         else:
-            st.warning(f"⚠️ No data returned from SQL table {table_name}, falling back to CSV")
-            return load_csv_data(filename)
+            st.error(f"❌ No data returned from SQL table: {table_name}")
+            return pd.DataFrame()
             
     except ImportError:
-        st.warning("⚠️ Databricks client not available, using CSV data")
-        return load_csv_data(filename)
+        st.error("❌ Databricks client not available")
+        return pd.DataFrame()
     except Exception as e:
-        st.error(f"❌ Error loading from Databricks SQL: {str(e)}")
-        st.info("📁 Falling back to CSV data")
-        return load_csv_data(filename)
+        st.error(f"❌ Error loading from Databricks SQL table {table_name}: {str(e)}")
+        return pd.DataFrame()
 
-def get_data_source_info(use_live_data: bool, http_path: Optional[str] = None) -> Dict[str, str]:
+def get_data_source_info(http_path: Optional[str] = None) -> Dict[str, str]:
     """
-    Get information about the current data source
+    Get information about the Databricks SQL data source
     
     Args:
-        use_live_data: Whether using live data
         http_path: HTTP path if using live data (optional, uses env var if not provided)
     
     Returns:
         Dictionary with data source information
     """
-    if use_live_data:
-        try:
-            from databricks_client import get_databricks_client
-            from config import DATA_CONFIG
-            
-            client = get_databricks_client(
-                catalog=DATA_CONFIG["databricks"]["catalog"],
-                schema=DATA_CONFIG["databricks"]["schema"]
-            )
-            
-            warehouse_info = client.get_warehouse_info(http_path)
-            if warehouse_info:
-                return {
-                    "source": "Databricks SQL",
-                    "catalog": warehouse_info["catalog"],
-                    "schema": warehouse_info["schema"],
-                    "warehouse_id": warehouse_info["warehouse_id"],
-                    "host": warehouse_info.get("host", "N/A")
-                }
-        except Exception:
-            pass
+    try:
+        from databricks_client import get_databricks_client
+        from config import DATA_CONFIG
+        
+        client = get_databricks_client(
+            catalog=DATA_CONFIG["databricks"]["catalog"],
+            schema=DATA_CONFIG["databricks"]["schema"]
+        )
+        
+        warehouse_info = client.get_warehouse_info(http_path)
+        if warehouse_info:
+            return {
+                "source": "Databricks SQL",
+                "catalog": warehouse_info["catalog"],
+                "schema": warehouse_info["schema"],
+                "warehouse_id": warehouse_info["warehouse_id"],
+                "host": warehouse_info.get("host", "N/A")
+            }
+    except Exception:
+        pass
     
     return {
-        "source": "CSV Files",
-        "location": "example_data/",
-        "type": "Static sample data"
+        "source": "Databricks SQL",
+        "catalog": "N/A",
+        "schema": "N/A",
+        "status": "Configuration needed"
     }
+
+def is_empty_string(value):
+    """Safely check if a value is empty string, handling pandas Series/arrays"""
+    try:
+        # Handle pandas Series or array inputs
+        if hasattr(value, '__iter__') and not isinstance(value, str):
+            if len(value) > 0:
+                value = value.iloc[0] if hasattr(value, 'iloc') else value[0]
+            else:
+                return True
+        
+        # Check for null or empty values
+        if pd.isna(value):
+            return True
+        if value == '' or value is None:
+            return True
+        return False
+    except (ValueError, TypeError, AttributeError):
+        return True
 
 def parse_tags(tags_str):
     """Parse custom tags JSON string into a readable format"""
-    if pd.isna(tags_str) or tags_str == '':
+    # Check for null or empty values using our safe function
+    if is_empty_string(tags_str):
         return {}
+    
+    # Handle pandas Series or array inputs by taking the first element
+    if hasattr(tags_str, '__iter__') and not isinstance(tags_str, str):
+        if len(tags_str) > 0:
+            tags_str = tags_str.iloc[0] if hasattr(tags_str, 'iloc') else tags_str[0]
+        else:
+            return {}
+    
     try:
         # Remove extra quotes and parse JSON
         if isinstance(tags_str, str):
@@ -151,7 +227,7 @@ def parse_tags(tags_str):
             if tags_str.startswith('"{') and tags_str.endswith('}"'):
                 tags_str = tags_str[1:-1].replace('""', '"')
             return json.loads(tags_str)
-    except (json.JSONDecodeError, ValueError):
+    except (json.JSONDecodeError, ValueError, TypeError):
         return {}
     return tags_str if isinstance(tags_str, dict) else {}
 
@@ -160,9 +236,13 @@ def get_tag_values(df, tag_key):
     tag_values = set()
     if 'custom_tags' in df.columns:
         for tags_str in df['custom_tags'].dropna():
-            tags = parse_tags(tags_str)
-            if tag_key in tags:
-                tag_values.add(tags[tag_key])
+            try:
+                tags = parse_tags(tags_str)
+                if isinstance(tags, dict) and tag_key in tags:
+                    tag_values.add(tags[tag_key])
+            except Exception:
+                # Skip rows with problematic tag data
+                continue
     return sorted(list(tag_values))
 
 def format_currency(value):
@@ -282,6 +362,6 @@ def create_data_table(df, title, max_rows=100):
         if col in display_df.columns:
             display_df[col] = display_df[col].apply(format_currency)
     
-    st.dataframe(display_df, width="stretch", hide_index=True)
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
     
     return display_df

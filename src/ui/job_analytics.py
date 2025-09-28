@@ -8,7 +8,7 @@ import altair as alt
 import json
 from datetime import timedelta
 from utils import (
-    load_data, parse_tags, get_tag_values, format_currency, 
+    load_data, parse_tags, get_tag_values, format_currency, is_empty_string,
     create_metric_card, apply_filters, create_bar_chart, create_horizontal_bar_chart,
     create_line_chart, create_data_table, DATABRICKS_COLORS
 )
@@ -42,11 +42,10 @@ def show_most_expensive_jobs():
     st.subheader("🏆 Most Expensive Jobs")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    jobs_data = load_data('most_expensive_jobs.csv', 
-                         use_live_data=config['use_live_data'], 
+    jobs_data = load_data('most_expensive_jobs', 
                          http_path=config['http_path'])
     if jobs_data.empty:
         st.warning("No data available for most expensive jobs")
@@ -136,7 +135,7 @@ def show_most_expensive_jobs():
         
         # Use job_id for display if name is null
         top_jobs['display_name'] = top_jobs.apply(
-            lambda row: row['name'] if pd.notna(row['name']) and row['name'] != '' 
+            lambda row: row['name'] if pd.notna(row['name']) and str(row['name']).strip() != '' 
             else f"Job ID: {row['job_id']}", axis=1
         )
         
@@ -162,7 +161,7 @@ def show_most_expensive_jobs():
         
         # Use job_id for display if name is null
         job_run_counts['display_name'] = job_run_counts.apply(
-            lambda row: row['name'] if pd.notna(row['name']) and row['name'] != '' 
+            lambda row: row['name'] if pd.notna(row['name']) and str(row['name']).strip() != '' 
             else f"Job ID: {row['job_id']}", axis=1
         )
         
@@ -183,11 +182,10 @@ def show_most_expensive_job_runs():
     st.subheader("🏃 Most Expensive Job Runs")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    runs_data = load_data('most_expensive_job_runs.csv',
-                         use_live_data=config['use_live_data'], 
+    runs_data = load_data('most_expensive_job_runs',
                          http_path=config['http_path'])
     if runs_data.empty:
         st.warning("No data available for most expensive job runs")
@@ -277,8 +275,8 @@ def show_most_expensive_job_runs():
         
         # Create display label for runs
         top_runs['display_label'] = top_runs.apply(
-            lambda row: f"Run {row['run_id']}" if pd.isna(row['name']) or row['name'] == '' 
-            else f"{row['name'][:20]}...", axis=1
+            lambda row: f"Run {row['run_id']}" if pd.isna(row['name']) or str(row['name']).strip() == '' 
+            else f"{str(row['name'])[:20]}...", axis=1
         )
         
         chart = create_horizontal_bar_chart(
@@ -335,11 +333,10 @@ def show_job_spend_trends():
     st.subheader("📈 Job Spend Trends")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    trend_data = load_data('job_spend_trend.csv',
-                          use_live_data=config['use_live_data'], 
+    trend_data = load_data('job_spend_trend',
                           http_path=config['http_path'])
     if trend_data.empty:
         st.warning("No job spend trend data available")
@@ -424,11 +421,10 @@ def show_failed_jobs_analysis():
     st.subheader("❌ Failed Jobs Analysis")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    failed_data = load_data('failed_jobs_analysis.csv',
-                           use_live_data=config['use_live_data'], 
+    failed_data = load_data('failed_jobs_analysis',
                            http_path=config['http_path'])
     if failed_data.empty:
         st.warning("No failed jobs analysis data available")

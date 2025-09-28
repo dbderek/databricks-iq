@@ -12,10 +12,11 @@ import os
 import logging
 from datetime import datetime
 from pathlib import Path
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP
 
 from .clients.databricks_client import DatabricksClient
 from .managers.tag_manager import TagManager
@@ -75,15 +76,22 @@ if databricks_client and tag_manager and budget_manager:
     except Exception as e:
         logger.error(f"Failed to register MCP tools: {e}")
 
-# Create the MCP app
+# Create the MCP app using the current method
 mcp_app = mcp.streamable_http_app()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manage the lifecycle of the FastAPI application."""
+    logger.info("Starting up Databricks IQ MCP Server")
+    yield
+    logger.info("Shutting down Databricks IQ MCP Server")
 
 # Create the main FastAPI app
 app = FastAPI(
     title="Databricks IQ MCP Server",
     description="A comprehensive MCP server for managing Databricks resource tags and budget policies",
     version="1.0.0",
-    lifespan=lambda _: mcp.session_manager.run(),
+    lifespan=lifespan,
 )
 
 STATIC_DIR = Path(__file__).parent / "static"

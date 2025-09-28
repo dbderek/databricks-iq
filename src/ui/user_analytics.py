@@ -33,11 +33,10 @@ def show_user_serverless_consumption():
     st.subheader("⚡ User Serverless Spend Details")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    consumption_data = load_data('user_serverless_consumption.csv',
-                                use_live_data=config['use_live_data'], 
+    consumption_data = load_data('user_serverless_consumption',
                                 http_path=config['http_path'])
     if consumption_data.empty:
         st.warning("No user serverless consumption data available")
@@ -173,11 +172,10 @@ def show_user_spend_alerts():
     st.subheader("🚨 User Serverless Spend")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    alerts_data = load_data('user_spend_alerts.csv',
-                           use_live_data=config['use_live_data'], 
+    alerts_data = load_data('user_spend_alerts',
                            http_path=config['http_path'])
     if alerts_data.empty:
         st.warning("No user spend alerts data available")

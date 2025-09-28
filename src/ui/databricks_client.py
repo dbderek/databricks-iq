@@ -294,32 +294,3 @@ def get_databricks_client(catalog: str = "databricksiq", schema: str = "main") -
     if _databricks_client is None or _databricks_client.catalog != catalog or _databricks_client.schema != schema:
         _databricks_client = DatabricksClient(catalog, schema)
     return _databricks_client
-
-# Table name mappings (CSV filename to SQL table name)
-TABLE_MAPPINGS = {
-    "most_expensive_jobs.csv": "most_expensive_jobs",
-    "most_expensive_job_runs.csv": "most_expensive_job_runs", 
-    "job_spend_trend.csv": "job_spend_trend",
-    "failed_jobs_analysis.csv": "failed_jobs_analysis",
-    "serverless_job_spend.csv": "serverless_job_spend",
-    "serverless_notebook_spend.csv": "serverless_notebook_spend",
-    "serverless_consumption_by_tag.csv": "serverless_consumption_by_tag",
-    "model_serving_costs.csv": "model_serving_costs",
-    "batch_inference_costs.csv": "batch_inference_costs",
-    "user_serverless_consumption.csv": "user_serverless_consumption",
-    "user_spend_alerts.csv": "user_spend_alerts",
-    "job_retry_patterns.csv": "job_retry_patterns",
-    "workspace_spend_alerts.csv": "workspace_spend_alerts"
-}
-
-def get_table_name_from_filename(filename: str) -> str:
-    """
-    Convert CSV filename to SQL table name
-    
-    Args:
-        filename: CSV filename (e.g., "most_expensive_jobs.csv")
-        
-    Returns:
-        SQL table name
-    """
-    return TABLE_MAPPINGS.get(filename, filename.replace('.csv', ''))

@@ -7,7 +7,7 @@ import pandas as pd
 import altair as alt
 import json
 from utils import (
-    load_data, parse_tags, get_tag_values, format_currency, 
+    load_data, parse_tags, get_tag_values, format_currency, convert_numeric_columns, safe_nlargest,
     create_metric_card, apply_filters, create_bar_chart, create_horizontal_bar_chart,
     create_line_chart, create_data_table, DATABRICKS_COLORS
 )
@@ -37,11 +37,10 @@ def show_serverless_job_spend():
     st.subheader("💼 Serverless Job Spend")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    job_data = load_data('serverless_job_spend.csv',
-                        use_live_data=config['use_live_data'], 
+    job_data = load_data('serverless_job_spend',
                         http_path=config['http_path'])
     if job_data.empty:
         st.warning("No serverless job spend data available")
@@ -73,7 +72,7 @@ def show_serverless_job_spend():
         
         # Use job_id for display if job_name is null
         top_jobs['display_name'] = top_jobs.apply(
-            lambda row: row['job_name'] if pd.notna(row['job_name']) and row['job_name'] != '' 
+            lambda row: row['job_name'] if pd.notna(row['job_name']) and str(row['job_name']).strip() != '' 
             else f"Job ID: {row['job_id']}", axis=1
         )
         
@@ -94,11 +93,10 @@ def show_serverless_notebook_spend():
     st.subheader("📓 Serverless Notebook Spend")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    notebook_data = load_data('serverless_notebook_spend.csv',
-                             use_live_data=config['use_live_data'], 
+    notebook_data = load_data('serverless_notebook_spend',
                              http_path=config['http_path'])
     if notebook_data.empty:
         st.warning("No serverless notebook spend data available")
@@ -147,11 +145,10 @@ def show_serverless_consumption_by_tag():
     st.subheader("🏷️ Consumption by Tag")
     
     # Get data source configuration from session state
-    config = st.session_state.get('data_source_config', {'use_live_data': False, 'http_path': ''})
+    config = st.session_state.get('data_source_config', {'http_path': None})
     
     # Load data
-    tag_data = load_data('serverless_consumption_by_tag.csv',
-                        use_live_data=config['use_live_data'], 
+    tag_data = load_data('serverless_consumption_by_tag',
                         http_path=config['http_path'])
     if tag_data.empty:
         st.warning("No serverless consumption by tag data available")

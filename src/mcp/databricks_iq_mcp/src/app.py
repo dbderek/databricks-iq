@@ -91,7 +91,7 @@ app = FastAPI(
     title="Databricks IQ MCP Server",
     description="A comprehensive MCP server for managing Databricks resource tags and budget policies",
     version="1.0.0",
-    lifespan=lifespan,
+    ifespan=lambda _: mcp.session_manager.run(),
 )
 
 STATIC_DIR = Path(__file__).parent / "static"
@@ -121,7 +121,3 @@ async def health_check():
 
 # Mount the MCP app
 app.mount("/", mcp_app)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)

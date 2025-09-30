@@ -12,6 +12,11 @@
 
 # COMMAND ----------
 
+# MAGIC %pip install --upgrade databricks-sdk
+# MAGIC %restart_python
+
+# COMMAND ----------
+
 sp_client_id = dbutils.widgets.get('sp_client_id')
 sp_secret_scope = dbutils.widgets.get('sp_secret_scope')
 sp_secret_key = dbutils.widgets.get('sp_secret_key')
@@ -22,19 +27,21 @@ endpoint_name = "dbx-lakespend-endpoint"
 
 # COMMAND ----------
 
-# ==============================================================================
-# TODO: ONLY UNCOMMENT AND EDIT THIS SECTION IF YOU ARE USING OAUTH/SERVICE PRINCIPAL FOR CUSTOM MCP SERVERS.
-#       For managed MCP (the default), LEAVE THIS SECTION COMMENTED OUT.
-# ==============================================================================
-
+# Auth for Agent->MCP
 import os
+from databricks.sdk import WorkspaceClient
+
+w = WorkspaceClient()
+app = w.apps.get(name='mcp-databricks-lakespend')
 
 # # Set your Databricks client ID and client secret for service principal authentication.
+DATABRICKS_HOST = w.config.host
 DATABRICKS_CLIENT_ID = sp_client_id
 DATABRICKS_CLIENT_SECRET = dbutils.secrets.get(scope=sp_secret_scope, key=sp_secret_key)
-DATABRICKS_MCP_SERVER_URL = "https://<your-databricks-apps-instance>/mcp"
+DATABRICKS_MCP_SERVER_URL = app.url
 
 # # Load your service principal credentials into environment variables
+os.environ["DATABRICKS_HOST"] = DATABRICKS_HOST
 os.environ["DATABRICKS_CLIENT_ID"] = DATABRICKS_CLIENT_ID
 os.environ["DATABRICKS_CLIENT_SECRET"] = DATABRICKS_CLIENT_SECRET
 os.environ["DATABRICKS_MCP_SERVER_URL"] = DATABRICKS_MCP_SERVER_URL
@@ -114,6 +121,7 @@ agents.deploy(
     UC_MODEL_NAME, 
     uc_registered_model_info.version,
     environment_vars={
+    "DATABRICKS_HOST": os.environ["DATABRICKS_HOST",
     "DATABRICKS_CLIENT_ID": os.environ["DATABRICKS_CLIENT_ID"],
     "DATABRICKS_CLIENT_SECRET": os.environ["DATABRICKS_CLIENT_SECRET"],
     "DATABRICKS_MCP_SERVER_URL": os.environ["DATABRICKS_MCP_SERVER_URL"]

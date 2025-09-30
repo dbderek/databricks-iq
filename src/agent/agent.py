@@ -144,7 +144,7 @@ Ask me anything about Databricks resource management, tag governance, or budget 
 # Uncomment and fill in your settings ONLY if connecting to a custom MCP server.
 
 workspace_client = WorkspaceClient(
-    host="https://fe-vm-buzzforce-demo-workspace.cloud.databricks.com/",
+    host=os.getenv("DATABRICKS_HOST"),
     client_id=os.getenv("DATABRICKS_CLIENT_ID"),
     client_secret=os.getenv("DATABRICKS_CLIENT_SECRET"),
     auth_type="oauth-m2m",   # Enables machine-to-machine OAuth

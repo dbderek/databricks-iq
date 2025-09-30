@@ -29,13 +29,14 @@ from databricks.sdk import WorkspaceClient
 w = WorkspaceClient()
 host = w.config.host
 app = w.apps.get(name='mcp-databricks-lakespend')
-mcp_app_url = app.url
+mcp_app_url = f"{app.url}/mcp"
 
 # # Set your Databricks client ID and client secret for service principal authentication.
 DATABRICKS_HOST = host
 DATABRICKS_CLIENT_ID = sp_client_id
 DATABRICKS_CLIENT_SECRET = dbutils.secrets.get(scope=sp_secret_scope, key=sp_secret_key)
 DATABRICKS_MCP_SERVER_URL = mcp_app_url
+print(DATABRICKS_HOST)
 
 # # Load your service principal credentials into environment variables
 os.environ["DATABRICKS_HOST"] = DATABRICKS_HOST
@@ -66,6 +67,14 @@ resources = [
     DatabricksServingEndpoint(endpoint_name=LLM_ENDPOINT_NAME), 
     DatabricksFunction(function_name="system.ai.python_exec")
 ]
+
+EXPERIMENT_PATH = "/Workspace/Shared/agent_deployment"
+if mlflow.get_experiment_by_name(EXPERIMENT_PATH) is None:
+    if not os.path.exists(os.path.dirname(EXPERIMENT_PATH)):
+         os.makedirs(os.path.dirname(EXPERIMENT_PATH))
+    mlflow.create_experiment(EXPERIMENT_PATH)
+
+mlflow.set_experiment(EXPERIMENT_PATH)
 
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
@@ -118,7 +127,7 @@ agents.deploy(
     UC_MODEL_NAME, 
     uc_registered_model_info.version,
     environment_vars={
-    "DATABRICKS_HOST": os.environ["DATABRICKS_HOST",
+    "DATABRICKS_HOST": os.environ["DATABRICKS_HOST"],
     "DATABRICKS_CLIENT_ID": os.environ["DATABRICKS_CLIENT_ID"],
     "DATABRICKS_CLIENT_SECRET": os.environ["DATABRICKS_CLIENT_SECRET"],
     "DATABRICKS_MCP_SERVER_URL": os.environ["DATABRICKS_MCP_SERVER_URL"]

@@ -1,4 +1,4 @@
-# Databricks IQ - UI Component
+# Databricks LakeSpend - UI Component
 
 A comprehensive Streamlit dashboard for Databricks cost management and resource analytics.
 
@@ -188,7 +188,7 @@ streamlit run app.py --server.runOnSave true
 ## Integration with Other Components
 
 ### MCP Server Integration
-- The chatbot connects to the MCP server at `/src/mcp/databricks_iq_mcp/`
+- The chatbot connects to the MCP server at `/src/mcp/databricks_lakespend_mcp/`
 - Uses the comprehensive tagging and budget management tools
 - Supports all 12+ Databricks resource types
 
@@ -205,4 +205,4 @@ For issues or questions:
 3. Ensure all dependencies and authentication are properly configured
 4. Verify the MCP server and agent are operational
 
-The Databricks IQ dashboard provides a comprehensive solution for cost management and resource analytics across your Databricks environment.
+The Databricks LakeSpend dashboard provides a comprehensive solution for cost management and resource analytics across your Databricks environment.

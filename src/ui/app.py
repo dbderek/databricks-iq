@@ -1,5 +1,5 @@
 """
-Databricks IQ - Cost Management Dashboard
+Databricks LakeSpend - Cost Management Dashboard
 A comprehensive Streamlit application for Databricks cost analysis and resource management
 """
 
@@ -221,7 +221,7 @@ def load_databricks_logo():
     return None
 
 def show_header():
-    """Display the Databricks IQ header"""
+    """Display the Databricks LakeSpend header"""
     logo_path = load_databricks_logo()
     
     st.markdown(DATABRICKS_CSS, unsafe_allow_html=True)
@@ -233,7 +233,7 @@ def show_header():
     <div class="databricks-header">
         <div class="databricks-logo">
             <div>
-                <h1 class="databricks-title">Databricks IQ</h1>
+                <h1 class="databricks-title">Databricks LakeSpend</h1>
                 <p class="databricks-subtitle">Cost Management & Analytics Dashboard</p>
             </div>
         </div>
@@ -251,7 +251,7 @@ def main():
     """Main application function"""
     # Configure page
     st.set_page_config(
-        page_title="Databricks IQ - Cost Management Dashboard",
+        page_title="Databricks LakeSpend - Cost Management Dashboard",
         page_icon="🧱",
         layout="wide",
         initial_sidebar_state="expanded"

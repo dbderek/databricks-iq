@@ -1,5 +1,5 @@
 """
-Databricks IQ MCP Server - Refactored Main Application
+Databricks LakeSpend MCP Server - Refactored Main Application
 
 A Model Context Protocol (MCP) server for managing Databricks resources.
 This server provides tools for tagging and budget policy management across
@@ -38,7 +38,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # Initialize MCP server
-mcp = FastMCP("Databricks IQ MCP Server")
+mcp = FastMCP("Databricks LakeSpend MCP Server")
 
 # Global instances
 databricks_client = None
@@ -82,13 +82,13 @@ mcp_app = mcp.streamable_http_app()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Manage the lifecycle of the FastAPI application."""
-    logger.info("Starting up Databricks IQ MCP Server")
+    logger.info("Starting up Databricks LakeSpend MCP Server")
     yield
-    logger.info("Shutting down Databricks IQ MCP Server")
+    logger.info("Shutting down Databricks LakeSpend MCP Server")
 
 # Create the main FastAPI app
 app = FastAPI(
-    title="Databricks IQ MCP Server",
+    title="Databricks LakeSpend MCP Server",
     description="A comprehensive MCP server for managing Databricks resource tags and budget policies",
     version="1.0.0",
     ifespan=lambda _: mcp.session_manager.run(),

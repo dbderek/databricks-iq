@@ -1,5 +1,5 @@
 """
-Job Analytics Page for Databricks IQ
+Job Analytics Page for Databricks LakeSpend
 """
 
 import streamlit as st

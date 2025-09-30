@@ -1,4 +1,4 @@
-# Databricks Tags MCP Server
+# Databricks LakeSpend MCP Server
 
 A Model Context Protocol (MCP) server implementation using FastMCP that provides comprehensive tag management tools for Databricks resources including clusters, SQL warehouses, jobs, and pipelines.
 

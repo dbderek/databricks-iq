@@ -1,7 +1,7 @@
 resources:
   apps:
     ui:
-      name: "databricks-iq"
+      name: "databricks-lakespend"
       source_code_path: ../src/ui
       description: "A Streamlit app for monitoring jobs and other databricks usage"
 
@@ -13,9 +13,9 @@ resources:
             permission: "CAN_MANAGE"
 
     mcp:
-      name: "mcp-databricks-iq"
-      source_code_path: ../src/mcp/databricks_iq_mcp
-      description: "An MCP server app for the databricks-iq app"
+      name: "mcp-databricks-lakespend"
+      source_code_path: ../src/mcp/databricks_lakespend_mcp
+      description: "An MCP server app for the databricks-lakespend app"
 
       # The resources which this app should have access to
       resources:

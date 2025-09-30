@@ -1,5 +1,5 @@
 """
-Databricks IQ Chatbot Interface
+Databricks LakeSpend Chatbot Interface
 A comprehensive chatbot for Databricks cost management and analytics assistance
 """
 
@@ -21,7 +21,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Configuration - Using environment variable for serving endpoint
-SERVING_ENDPOINT = os.getenv('DATABRICKS_IQ_ENDPOINT', 'dbx-iq-agent-endpoint')
+SERVING_ENDPOINT = os.getenv('DATABRICKS_LAKESPEND_ENDPOINT', 'dbx-lakespend-agent-endpoint')
 
 # Import MLflow and Databricks SDK components
 try:
@@ -163,7 +163,7 @@ def submit_feedback(endpoint, request_id, rating):
         "dataframe_records": [
             {
                 "source": json.dumps({
-                    "id": "databricks-iq-assistant",
+                    "id": "databricks-lakespend-assistant",
                     "type": "human"
                 }),
                 "request_id": request_id,
@@ -186,7 +186,7 @@ def query_endpoint(endpoint_name, messages, return_traces, stream=True):
     """Query the endpoint, returning messages and request ID with streaming support."""
     if not DEPENDENCIES_AVAILABLE:
         # Fallback response when dependencies are not available
-        return [{"role": "assistant", "content": "I'm sorry, but the Databricks IQ assistant is not currently available. The MLflow and Databricks SDK dependencies are required for the chatbot functionality. You can still use the analytics pages to explore your Databricks costs and usage patterns."}], None
+        return [{"role": "assistant", "content": "I'm sorry, but the Databricks LakeSpend assistant is not currently available. The MLflow and Databricks SDK dependencies are required for the chatbot functionality. You can still use the analytics pages to explore your Databricks costs and usage patterns."}], None
     
     try:
         client = get_deploy_client("databricks")
@@ -371,8 +371,8 @@ def query_endpoint(endpoint_name, messages, return_traces, stream=True):
         return [{"role": "assistant", "content": f"I encountered an error while processing your request: {str(e)}. Please try again or check if the endpoint is properly configured."}], None
 
 def get_system_prompt():
-    """Get the system prompt for the Databricks IQ assistant"""
-    return """You are a helpful Databricks IQ Assistant that specializes in cost management and analytics for Databricks workspaces.
+    """Get the system prompt for the Databricks LakeSpend assistant"""
+    return """You are a helpful Databricks LakeSpend Assistant that specializes in cost management and analytics for Databricks workspaces.
 
 You can help users with:
 - Analyzing Databricks costs and spending patterns
@@ -465,12 +465,12 @@ def display_cost_examples():
         """)
 
 def show_chatbot():
-    """Main Databricks IQ chatbot interface"""
+    """Main Databricks LakeSpend chatbot interface"""
     # Initialize session state
     if "history" not in st.session_state:
         st.session_state.history = []
 
-    st.markdown('<div class="main-header">🤖 Databricks IQ Assistant</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🤖 Databricks LakeSpend Assistant</div>', unsafe_allow_html=True)
     
     # Display agent description
     st.markdown(f"""

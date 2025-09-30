@@ -1,5 +1,5 @@
 """
-Serverless Analytics Page for Databricks IQ
+Serverless Analytics Page for Databricks LakeSpend
 """
 
 import streamlit as st

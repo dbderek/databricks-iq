@@ -1,5 +1,5 @@
 """
-Databricks SQL Client for Databricks IQ
+Databricks SQL Client for Databricks LakeSpend
 Handles connections and queries to Databricks SQL warehouses
 """
 
@@ -30,7 +30,7 @@ def get_warehouse_http_path() -> Optional[str]:
 class DatabricksClient:
     """Client for managing Databricks SQL connections and queries"""
     
-    def __init__(self, catalog: str = "databricksiq", schema: str = "main"):
+    def __init__(self, catalog: str = "databrickslakespend", schema: str = "main"):
         """
         Initialize the Databricks client
         
@@ -279,7 +279,7 @@ class DatabricksClient:
 # Global client instance
 _databricks_client = None
 
-def get_databricks_client(catalog: str = "databricksiq", schema: str = "main") -> DatabricksClient:
+def get_databricks_client(catalog: str = "databrickslakespend", schema: str = "main") -> DatabricksClient:
     """
     Get a singleton instance of the Databricks client
     

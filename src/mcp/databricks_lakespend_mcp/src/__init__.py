@@ -1,5 +1,5 @@
 """
-Databricks IQ MCP Server
+Databricks LakeSpend MCP Server
 
 A modular MCP server for managing Databricks resources with tagging and budget policies.
 """

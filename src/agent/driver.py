@@ -91,7 +91,7 @@ mlflow.set_registry_uri("databricks-uc")
 # TODO: define the catalog, schema, and model name for your UC model
 catalog = catalog
 schema = schema
-model_name = "databricks-iq-agent"
+model_name = "databricks-lakespend-agent"
 UC_MODEL_NAME = f"{catalog}.{schema}.{model_name}"
 
 # register the model to UC

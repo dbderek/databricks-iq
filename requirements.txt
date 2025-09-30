@@ -1,4 +1,4 @@
-# Global requirements for Databricks IQ project
+# Global requirements for Databricks LakeSpend project
 # This file combines dependencies for both UI and MCP server components
 
 # Core Python packages

@@ -1,5 +1,5 @@
 """
-User Analytics Page for Databricks IQ
+User Analytics Page for Databricks LakeSpend
 """
 
 import streamlit as st

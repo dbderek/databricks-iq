@@ -1,5 +1,5 @@
 """
-Utilities for Databricks IQ application
+Utilities for Databricks LakeSpend application
 """
 
 import streamlit as st

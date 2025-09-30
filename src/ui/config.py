@@ -1,11 +1,11 @@
 """
-Databricks IQ Configuration
+Databricks LakeSpend Configuration
 Customize the application settings here
 """
 
 # Application Settings
 APP_CONFIG = {
-    "title": "Databricks IQ",
+    "title": "Databricks LakeSpend",
     "subtitle": "Cost Management & Resource Analytics",
     "page_icon": "🧱",
     "layout": "wide",
@@ -51,7 +51,7 @@ CHART_COLORS = {
 DATA_CONFIG = {
     # Databricks SQL configuration
     "databricks": {
-        "catalog": "databricksiq",
+        "catalog": "databrickslakespend",
         "schema": "main",
         "warehouse_id_env": "SQL_WAREHOUSE",  # Environment variable name
         "query_timeout": 30,
@@ -139,7 +139,7 @@ LOGGING_CONFIG = {
     "level": "INFO",
     "format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     "log_to_file": False,
-    "log_file": "databricks_iq.log"
+    "log_file": "databricks_lakespend.log"
 }
 
 # Development Configuration

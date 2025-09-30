@@ -1537,7 +1537,7 @@ class BudgetManager:
 
 
 # Initialize the MCP server
-mcp = FastMCP("Databricks IQ MCP Server")
+mcp = FastMCP("Databricks LakeSpend MCP Server")
 
 # Initialize Databricks client, tag manager, and budget manager
 db_client = DatabricksClient()
@@ -2226,9 +2226,9 @@ def apply_budget_policy_to_resources(policy_id: str, resource_filters: Dict[str,
 # Resources
 @mcp.resource("server://info")
 def get_server_info() -> str:
-    """Get information about this Databricks IQ MCP server."""
+    """Get information about this Databricks LakeSpend MCP server."""
     info = {
-        "name": "Databricks IQ MCP Server",
+        "name": "Databricks LakeSpend MCP Server",
         "version": "2.0.0",
         "description": "A comprehensive MCP server for managing Databricks resource tags and budget policies",
         "supported_resources": [

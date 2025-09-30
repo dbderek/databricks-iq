@@ -1,7 +1,7 @@
 resources:
   jobs:
-    databricks-iq-data-refresh:
-      name: databricks-iq-data-refresh
+    databricks-lakespend-data-refresh:
+      name: databricks-lakespend-data-refresh
       # Run this job once an hour.
       trigger:
         periodic:
@@ -10,14 +10,14 @@ resources:
       tasks:
         - task_key: refresh_pipeline
           pipeline_task:
-            pipeline_id: ${resources.pipelines.databricks-iq-data.id}       
+            pipeline_id: ${resources.pipelines.databricks-lakespend-data.id}       
       queue:
         enabled: true
         
       performance_target: PERFORMANCE_OPTIMIZED
 
-    databricks-iq-create-agent:
-      name: create-databricks-iq-agent
+    databricks-lakespend-create-agent:
+      name: create-databricks-lakespend-agent
       tasks:
         - task_key: run_agent_driver
           notebook_task:

@@ -1,4 +1,10 @@
-example_data/*
+# Project specific files
+projectplan.md
+*databricks-design-guidelines*
+
+# Files and directories starting with "example_"
+example_*
+**/example_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

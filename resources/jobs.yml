@@ -17,7 +17,7 @@ resources:
       performance_target: PERFORMANCE_OPTIMIZED
 
     databricks-lakespend-create-agent:
-      name: create-databricks-lakespend-agent
+      name: databricks-lakespend-create-agent
       tasks:
         - task_key: run_agent_driver
           notebook_task:

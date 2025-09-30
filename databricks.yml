@@ -25,21 +25,6 @@ variables:
     description: The Databricks SQL Serverless Warehouse ID to use for this bundle.
 
 targets:
-  dev:
-    mode: development
-    default: false
-    workspace:
-      host: https://fe-vm-buzzforce-demo-workspace.cloud.databricks.com/
-      root_path: /Workspace/Users/derek.witt@databricks.com/.bundle/${bundle.name}/${bundle.target}
-    variables:
-      catalog: databrickslakespend
-      schema: main
-      service_principal_name: databricks-lakespend-sp
-      sp_client_id: 07f5f3e4-1dcb-4b1e-8c8e-6f3b7f3e4b1e
-      sp_secret_scope: databrickslakespend
-      sp_secret_key: databricks-lakespend-sp
-      dbsql_serverless_warehouse_id: 8baced1ff014912d
-
   deve2:
     mode: development
     default: false
@@ -64,9 +49,9 @@ targets:
     variables:
       catalog: databrickslakespend
       schema: main
-      service_principal_name: databricks-lakespend-mcp-sp
-      sp_client_id: 3ab2519b-2bda-448d-bfd0-446712f69bf2
-      sp_secret_scope: databrickslakespend
+      service_principal_name: databricks-lakespend-sp
+      sp_client_id: 0bddd711-b61d-44ca-abd5-d05b89561322
+      sp_secret_scope: databricks-lakespend
       sp_secret_key: databricks-lakespend-sp
       dbsql_serverless_warehouse_id: 148ccb90800933a1
       

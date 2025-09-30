@@ -1,0 +1,53 @@
+# Databricks Asset Bundle Configuration Template
+# Copy this file to databricks.yml and replace placeholders with your actual values
+
+bundle:
+  name: databricks-lakespend
+
+include:
+  - resources/*.yml
+
+workspace:
+  root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+
+targets:
+  dev:
+    mode: development
+    default: true
+    workspace:
+      host: YOUR_FULL_DEV_WORKSPACE_URL
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: YOUR_DEV_CATALOG_NAME
+      schema: main
+      service_principal_name: YOUR_SERVICE_PRINCIPAL_NAME
+      sp_client_id: YOUR_SERVICE_PRINCIPAL_CLIENT_ID
+      sp_secret_scope: YOUR_SECRET_SCOPE_NAME
+      sp_secret_key: YOUR_SECRET_KEY_NAME
+      dbsql_serverless_warehouse_id: YOUR_SQL_WAREHOUSE_ID
+
+  prod:
+    mode: production
+    default: false
+    workspace:
+      host: YOUR_FULL_PROD_WORKSPACE_URL
+      root_path: /Workspace/Users/${workspace.current_user.userName}/.bundle/${bundle.name}/${bundle.target}
+    variables:
+      catalog: YOUR_PROD_CATALOG_NAME
+      schema: main
+      service_principal_name: YOUR_SERVICE_PRINCIPAL_NAME
+      sp_client_id: YOUR_SERVICE_PRINCIPAL_CLIENT_ID
+      sp_secret_scope: YOUR_SECRET_SCOPE_NAME
+      sp_secret_key: YOUR_SECRET_KEY_NAME
+      dbsql_serverless_warehouse_id: YOUR_SQL_WAREHOUSE_ID
+
+# Placeholder values to replace:
+# YOUR_FULL_DEV_WORKSPACE_URL - Your full development workspace URL (e.g., https://adb-123456789.11.azuredatabricks.net/)
+# YOUR_FULL_PROD_WORKSPACE_URL - Your full production workspace URL (e.g., https://adb-987654321.11.azuredatabricks.net/)
+# YOUR_DEV_CATALOG_NAME - Development Unity Catalog name (recommend: databrickslakespend_dev)
+# YOUR_PROD_CATALOG_NAME - Production Unity Catalog name (recommend: databrickslakespend)
+# YOUR_SERVICE_PRINCIPAL_NAME - Service principal name (recommend: databricks-lakespend-sp)
+# YOUR_SERVICE_PRINCIPAL_CLIENT_ID - Service principal client ID from Azure/AWS
+# YOUR_SECRET_SCOPE_NAME - Databricks secret scope name
+# YOUR_SECRET_KEY_NAME - Secret key name within the scope
+# YOUR_SQL_WAREHOUSE_ID - SQL warehouse ID for the apps to use

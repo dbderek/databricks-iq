@@ -24,6 +24,6 @@ resources:
             id: ${var.dbsql_serverless_warehouse_id}
             permission: "CAN_MANAGE"
             
-      permissions:
-        - service_principal_name: ${var.service_principal_name}
-          level: "CAN_USE"
+      # permissions:
+      #   - service_principal_name: ${var.service_principal_name}
+      #     level: "CAN_USE"

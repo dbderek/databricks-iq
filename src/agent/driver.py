@@ -17,6 +17,8 @@ sp_secret_scope = dbutils.widgets.get('sp_secret_scope')
 sp_secret_key = dbutils.widgets.get('sp_secret_key')
 catalog = dbutils.widgets.get('catalog')
 schema = dbutils.widgets.get('schema')
+model_name = "databricks-lakespend-agent"
+endpoint_name = "dbx-lakespend-endpoint"
 
 # COMMAND ----------
 
@@ -63,7 +65,7 @@ resources = [
 
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
-        name="tag_agent",
+        name=model_name,
         python_model="agent.py",
         resources=resources,
         pip_requirements=[
@@ -117,5 +119,5 @@ agents.deploy(
     "DATABRICKS_MCP_SERVER_URL": os.environ["DATABRICKS_MCP_SERVER_URL"]
     },
     tags = {"endpointSource": "docs"},
-    endpoint_name='dbx-iq-agent-endpoint'
+    endpoint_name=endpoint_name
 )

@@ -12,11 +12,6 @@
 
 # COMMAND ----------
 
-# MAGIC %pip install --upgrade databricks-sdk
-# MAGIC %restart_python
-
-# COMMAND ----------
-
 sp_client_id = dbutils.widgets.get('sp_client_id')
 sp_secret_scope = dbutils.widgets.get('sp_secret_scope')
 sp_secret_key = dbutils.widgets.get('sp_secret_key')
@@ -32,13 +27,15 @@ import os
 from databricks.sdk import WorkspaceClient
 
 w = WorkspaceClient()
+host = w.config.host
 app = w.apps.get(name='mcp-databricks-lakespend')
+mcp_app_url = app.url
 
 # # Set your Databricks client ID and client secret for service principal authentication.
-DATABRICKS_HOST = w.config.host
+DATABRICKS_HOST = host
 DATABRICKS_CLIENT_ID = sp_client_id
 DATABRICKS_CLIENT_SECRET = dbutils.secrets.get(scope=sp_secret_scope, key=sp_secret_key)
-DATABRICKS_MCP_SERVER_URL = app.url
+DATABRICKS_MCP_SERVER_URL = mcp_app_url
 
 # # Load your service principal credentials into environment variables
 os.environ["DATABRICKS_HOST"] = DATABRICKS_HOST
@@ -72,7 +69,7 @@ resources = [
 
 with mlflow.start_run():
     logged_agent_info = mlflow.pyfunc.log_model(
-        name=model_name,
+        name="agent",
         python_model="agent.py",
         resources=resources,
         pip_requirements=[

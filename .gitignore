@@ -1,6 +1,7 @@
 # Project specific files
 projectplan.md
 *databricks-design-guidelines*
+CLAUDE.md
 
 # Files and directories starting with "example_"
 example_*

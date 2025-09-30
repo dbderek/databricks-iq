@@ -86,13 +86,28 @@ def render_message(msg):
             st.markdown(msg["content"])
         
         if "tool_calls" in msg and msg["tool_calls"]:
-            for call in msg["tool_calls"]:
-                fn_name = call["function"]["name"]
-                args = call["function"]["arguments"]
-                st.markdown(f"📊 Calling **`{fn_name}`** with:\n```json\n{args}\n```")
+            if st.session_state.get('show_tool_calls', True):
+                for call in msg["tool_calls"]:
+                    fn_name = call["function"]["name"]
+                    args = call["function"]["arguments"]
+                    st.markdown(f"� **Calling tool:** `{fn_name}`")
+                    with st.expander(f"Tool Arguments: {fn_name}", expanded=False):
+                        try:
+                            # Try to parse and pretty print JSON
+                            parsed_args = json.loads(args) if isinstance(args, str) else args
+                            st.json(parsed_args)
+                        except:
+                            st.code(args, language="json")
     elif msg["role"] == "tool":
-        st.markdown("🛠️ Tool Response:")
-        st.code(msg["content"], language="json")
+        if st.session_state.get('show_tool_responses', True):
+            st.markdown("🛠️ **Tool Response:**")
+            with st.expander("Tool Output", expanded=False):
+                try:
+                    # Try to parse and display as JSON if possible
+                    parsed_content = json.loads(msg["content"]) if isinstance(msg["content"], str) else msg["content"]
+                    st.json(parsed_content)
+                except:
+                    st.text(msg["content"])
 
 @st.fragment
 def render_assistant_message_feedback(i, request_id):
@@ -167,8 +182,8 @@ def submit_feedback(endpoint, request_id, rating):
     except Exception as e:
         logger.error(f"Failed to submit feedback: {e}")
 
-def query_endpoint(endpoint_name, messages, return_traces):
-    """Query the endpoint, returning messages and request ID."""
+def query_endpoint(endpoint_name, messages, return_traces, stream=True):
+    """Query the endpoint, returning messages and request ID with streaming support."""
     if not DEPENDENCIES_AVAILABLE:
         # Fallback response when dependencies are not available
         return [{"role": "assistant", "content": "I'm sorry, but the Databricks IQ assistant is not currently available. The MLflow and Databricks SDK dependencies are required for the chatbot functionality. You can still use the analytics pages to explore your Databricks costs and usage patterns."}], None
@@ -205,56 +220,152 @@ def query_endpoint(endpoint_name, messages, return_traces):
         if return_traces:
             inputs["databricks_options"] = {"return_trace": True}
         
-        res = client.predict(endpoint=endpoint_name, inputs=inputs)
-        request_id = res.get("databricks_output", {}).get("databricks_request_id")
-        
-        # Extract messages from the ResponsesAgent response format
-        result_messages = []
-        
-        if "output" in res:
-            # ResponsesAgent format
-            for output_item in res["output"]:
-                if output_item.get("type") == "message":
-                    # Text message
-                    content_parts = output_item.get("content", [])
-                    content_text = ""
-                    for part in content_parts:
-                        if isinstance(part, dict) and "text" in part:
-                            content_text += part["text"]
-                        elif isinstance(part, str):
-                            content_text += part
+        if stream:
+            # Use streaming prediction
+            result_messages = []
+            request_id = None
+            current_content = ""
+            
+            try:
+                # Create placeholder for streaming response
+                with st.chat_message("assistant"):
+                    response_placeholder = st.empty()
                     
-                    if content_text:
+                    for chunk in client.predict_stream(endpoint=endpoint_name, inputs=inputs):
+                        if hasattr(chunk, 'get'):
+                            # Handle different chunk types
+                            if "databricks_output" in chunk:
+                                request_id = chunk["databricks_output"].get("databricks_request_id")
+                            
+                            # Extract output from chunk
+                            if "output" in chunk:
+                                for output_item in chunk["output"]:
+                                    if output_item.get("type") == "message":
+                                        # Text message chunk
+                                        content_parts = output_item.get("content", [])
+                                        for part in content_parts:
+                                            if isinstance(part, dict) and "text" in part:
+                                                current_content += part["text"]
+                                                # Update the streaming display
+                                                response_placeholder.markdown(current_content + "▌")
+                                        
+                                    elif output_item.get("type") == "function_call":
+                                        # Function call
+                                        fn_name = output_item.get("name", "unknown")
+                                        args = output_item.get("arguments", "{}")
+                                        
+                                        # Show tool call immediately
+                                        if st.session_state.get('show_tool_calls', True):
+                                            st.markdown(f"🔧 **Calling tool:** `{fn_name}`")
+                                            with st.expander(f"Tool Arguments: {fn_name}", expanded=False):
+                                                try:
+                                                    parsed_args = json.loads(args) if isinstance(args, str) else args
+                                                    st.json(parsed_args)
+                                                except:
+                                                    st.code(args, language="json")
+                                        
+                                        result_messages.append({
+                                            "role": "assistant",
+                                            "content": "",
+                                            "tool_calls": [{
+                                                "id": output_item.get("call_id"),
+                                                "type": "function", 
+                                                "function": {
+                                                    "name": fn_name,
+                                                    "arguments": args
+                                                }
+                                            }]
+                                        })
+                                        
+                                    elif output_item.get("type") == "function_call_output":
+                                        # Tool response
+                                        output_content = output_item.get("output", "")
+                                        call_id = output_item.get("call_id")
+                                        
+                                        if st.session_state.get('show_tool_responses', True):
+                                            st.markdown("🛠️ **Tool Response:**")
+                                            with st.expander("Tool Output", expanded=False):
+                                                try:
+                                                    parsed_content = json.loads(output_content) if isinstance(output_content, str) else output_content
+                                                    st.json(parsed_content)
+                                                except:
+                                                    st.text(output_content)
+                                        
+                                        result_messages.append({
+                                            "role": "tool",
+                                            "content": output_content,
+                                            "tool_call_id": call_id
+                                        })
+                    
+                    # Final content update - remove cursor
+                    if current_content:
+                        response_placeholder.markdown(current_content)
                         result_messages.append({
                             "role": "assistant",
-                            "content": content_text
+                            "content": current_content
                         })
-                elif output_item.get("type") == "function_call":
-                    # Function call
-                    result_messages.append({
-                        "role": "assistant",
-                        "content": "",
-                        "tool_calls": [{
-                            "id": output_item.get("call_id"),
-                            "type": "function", 
-                            "function": {
-                                "name": output_item.get("name"),
-                                "arguments": output_item.get("arguments", "{}")
-                            }
-                        }]
-                    })
-                elif output_item.get("type") == "function_call_output":
-                    # Tool response
-                    result_messages.append({
-                        "role": "tool",
-                        "content": output_item.get("output", ""),
-                        "tool_call_id": output_item.get("call_id")
-                    })
+                        
+            except Exception as stream_error:
+                logger.error(f"Streaming error: {stream_error}")
+                st.error(f"Streaming failed: {stream_error}")
+                # Fallback to non-streaming
+                return query_endpoint(endpoint_name, messages, return_traces, stream=False)
+            
+            return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
+            
         else:
-            # Fallback if response format is different
-            result_messages = [{"role": "assistant", "content": str(res)}]
-        
-        return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
+            # Non-streaming fallback
+            res = client.predict(endpoint=endpoint_name, inputs=inputs)
+            request_id = res.get("databricks_output", {}).get("databricks_request_id")
+            
+            # Extract messages from the ResponsesAgent response format
+            result_messages = []
+            
+            if "output" in res:
+                # ResponsesAgent format
+                for output_item in res["output"]:
+                    if output_item.get("type") == "message":
+                        # Text message
+                        content_parts = output_item.get("content", [])
+                        content_text = ""
+                        for part in content_parts:
+                            if isinstance(part, dict) and "text" in part:
+                                content_text += part["text"]
+                            elif isinstance(part, str):
+                                content_text += part
+                        
+                        if content_text:
+                            result_messages.append({
+                                "role": "assistant",
+                                "content": content_text
+                            })
+                    elif output_item.get("type") == "function_call":
+                        # Function call
+                        result_messages.append({
+                            "role": "assistant",
+                            "content": "",
+                            "tool_calls": [{
+                                "id": output_item.get("call_id"),
+                                "type": "function", 
+                                "function": {
+                                    "name": output_item.get("name"),
+                                    "arguments": output_item.get("arguments", "{}")
+                                }
+                            }]
+                        })
+                    elif output_item.get("type") == "function_call_output":
+                        # Tool response
+                        result_messages.append({
+                            "role": "tool",
+                            "content": output_item.get("output", ""),
+                            "tool_call_id": output_item.get("call_id")
+                        })
+            else:
+                # Fallback if response format is different
+                result_messages = [{"role": "assistant", "content": str(res)}]
+            
+            return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
+            
     except Exception as e:
         logger.error(f"Query failed: {e}")
         return [{"role": "assistant", "content": f"I encountered an error while processing your request: {str(e)}. Please try again or check if the endpoint is properly configured."}], None
@@ -388,6 +499,26 @@ def show_chatbot():
         st.markdown("---")
         st.markdown("### 🛠️ Chat Controls")
         
+        # Tool visibility controls
+        st.session_state.show_tool_calls = st.checkbox(
+            "Show Tool Calls", 
+            value=st.session_state.get('show_tool_calls', True),
+            help="Display when the assistant calls MCP tools"
+        )
+        
+        st.session_state.show_tool_responses = st.checkbox(
+            "Show Tool Responses", 
+            value=st.session_state.get('show_tool_responses', True),
+            help="Display the responses from MCP tools"
+        )
+        
+        # Streaming toggle
+        st.session_state.enable_streaming = st.checkbox(
+            "Enable Streaming", 
+            value=st.session_state.get('enable_streaming', True),
+            help="Stream responses in real-time"
+        )
+        
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.history = []
             st.rerun()
@@ -395,6 +526,14 @@ def show_chatbot():
         # Display message count
         message_count = len(st.session_state.history)
         st.markdown(f"**Messages:** {message_count}")
+        
+        # Debug information
+        if st.session_state.get('show_debug', False):
+            with st.expander("🐛 Debug Info", expanded=False):
+                st.write("**Input Messages:**")
+                st.json([msg for msg in input_messages[-3:]])  # Show last 3 messages
+                st.write("**Endpoint:**", SERVING_ENDPOINT)
+                st.write("**Streaming:**", use_streaming)
         
         # Check endpoint availability
         if DEPENDENCIES_AVAILABLE:
@@ -405,6 +544,13 @@ def show_chatbot():
                 st.error("❌ Assistant Offline")
         else:
             st.warning("⚠️ Limited Mode")
+        
+        # Debug toggle
+        st.session_state.show_debug = st.checkbox(
+            "Show Debug Info", 
+            value=st.session_state.get('show_debug', False),
+            help="Show request/response debug information"
+        )
         
         # Features info and examples
         display_features_info()
@@ -433,16 +579,29 @@ def show_chatbot():
                         input_messages.append(msg)
             
             # Get response from the endpoint
-            messages, request_id = query_endpoint(
-                endpoint_name=SERVING_ENDPOINT,
-                messages=input_messages,
-                return_traces=endpoint_supports_feedback(SERVING_ENDPOINT) if DEPENDENCIES_AVAILABLE else False
-            )
+            use_streaming = st.session_state.get('enable_streaming', True)
             
-            # Display assistant response
-            with st.chat_message("assistant"):
-                for message in messages:
-                    render_message(message)
+            if use_streaming:
+                # For streaming, we handle display within query_endpoint
+                messages, request_id = query_endpoint(
+                    endpoint_name=SERVING_ENDPOINT,
+                    messages=input_messages,
+                    return_traces=endpoint_supports_feedback(SERVING_ENDPOINT) if DEPENDENCIES_AVAILABLE else False,
+                    stream=True
+                )
+            else:
+                # Non-streaming response
+                messages, request_id = query_endpoint(
+                    endpoint_name=SERVING_ENDPOINT,
+                    messages=input_messages,
+                    return_traces=endpoint_supports_feedback(SERVING_ENDPOINT) if DEPENDENCIES_AVAILABLE else False,
+                    stream=False
+                )
+                
+                # Display assistant response for non-streaming
+                with st.chat_message("assistant"):
+                    for message in messages:
+                        render_message(message)
             
             # Add assistant response to history
             assistant_response = AssistantResponse(messages=messages, request_id=request_id)

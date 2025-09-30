@@ -1,36 +1,27 @@
-"""
-Databricks LakeSpend Chatbot Interface
-A comprehensive chatbot for Databricks cost management and analytics assistance
+"dbx-lakespend-endpoint""""
+SeaTac Data Quality Monitoring System
+Team BuzzForce - Hackathon 2025-09
+
+Resource Tagging Agent Chatbot Module
 """
 
-import streamlit as st
-import json
-import uuid
 import logging
 import os
+import streamlit as st
 from abc import ABC, abstractmethod
 from collections import OrderedDict
 from typing import List, Dict, Any
-from pathlib import Path
-import sys
-
-# Add the parent directory to the path so we can import the agent
-sys.path.append(str(Path(__file__).parent.parent))
+import mlflow
+from mlflow.deployments import get_deploy_client
+from databricks.sdk import WorkspaceClient
+import json
+import uuid
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Configuration - Using environment variable for serving endpoint
-SERVING_ENDPOINT = os.getenv('DATABRICKS_LAKESPEND_ENDPOINT', 'dbx-lakespend-agent-endpoint')
-
-# Import MLflow and Databricks SDK components
-try:
-    from mlflow.deployments import get_deploy_client
-    from databricks.sdk import WorkspaceClient
-    DEPENDENCIES_AVAILABLE = True
-except ImportError:
-    DEPENDENCIES_AVAILABLE = False
-    logger.warning("MLflow or Databricks SDK not available. Chatbot will run in fallback mode.")
+# Configuration
+SERVING_ENDPOINT = os.getenv('SERVING_ENDPOINT', 'dbx-lakespend-endpoint')
 
 # Message classes (following the example pattern)
 class Message(ABC):
@@ -86,34 +77,19 @@ def render_message(msg):
             st.markdown(msg["content"])
         
         if "tool_calls" in msg and msg["tool_calls"]:
-            if st.session_state.get('show_tool_calls', True):
-                for call in msg["tool_calls"]:
-                    fn_name = call["function"]["name"]
-                    args = call["function"]["arguments"]
-                    st.markdown(f"� **Calling tool:** `{fn_name}`")
-                    with st.expander(f"Tool Arguments: {fn_name}", expanded=False):
-                        try:
-                            # Try to parse and pretty print JSON
-                            parsed_args = json.loads(args) if isinstance(args, str) else args
-                            st.json(parsed_args)
-                        except:
-                            st.code(args, language="json")
+            for call in msg["tool_calls"]:
+                fn_name = call["function"]["name"]
+                args = call["function"]["arguments"]
+                st.markdown(f"🏷️ Calling **`{fn_name}`** with:\n```json\n{args}\n```")
     elif msg["role"] == "tool":
-        if st.session_state.get('show_tool_responses', True):
-            st.markdown("🛠️ **Tool Response:**")
-            with st.expander("Tool Output", expanded=False):
-                try:
-                    # Try to parse and display as JSON if possible
-                    parsed_content = json.loads(msg["content"]) if isinstance(msg["content"], str) else msg["content"]
-                    st.json(parsed_content)
-                except:
-                    st.text(msg["content"])
+        st.markdown("🛠️ Tool Response:")
+        st.code(msg["content"], language="json")
 
 @st.fragment
 def render_assistant_message_feedback(i, request_id):
     """Render feedback UI for assistant messages."""
     def save_feedback(index):
-        if SERVING_ENDPOINT and DEPENDENCIES_AVAILABLE:
+        if SERVING_ENDPOINT:
             submit_feedback(
                 endpoint=SERVING_ENDPOINT,
                 request_id=request_id,
@@ -125,9 +101,6 @@ def render_assistant_message_feedback(i, request_id):
 # Model serving utilities (adapted from example)
 def _get_endpoint_task_type(endpoint_name: str) -> str:
     """Get the task type of a serving endpoint."""
-    if not DEPENDENCIES_AVAILABLE:
-        return "chat/completions"
-    
     try:
         w = WorkspaceClient()
         ep = w.serving_endpoints.get(endpoint_name)
@@ -136,9 +109,6 @@ def _get_endpoint_task_type(endpoint_name: str) -> str:
         return "chat/completions"
 
 def endpoint_supports_feedback(endpoint_name):
-    if not DEPENDENCIES_AVAILABLE:
-        return False
-        
     try:
         w = WorkspaceClient()
         endpoint = w.serving_endpoints.get(endpoint_name)
@@ -148,9 +118,6 @@ def endpoint_supports_feedback(endpoint_name):
 
 def submit_feedback(endpoint, request_id, rating):
     """Submit feedback to the agent."""
-    if not DEPENDENCIES_AVAILABLE:
-        return None
-        
     rating_string = "positive" if rating == 1 else "negative"
     text_assessments = [] if rating is None else [{
         "ratings": {
@@ -163,7 +130,7 @@ def submit_feedback(endpoint, request_id, rating):
         "dataframe_records": [
             {
                 "source": json.dumps({
-                    "id": "databricks-lakespend-assistant",
+                    "id": "resource-tagging-agent",
                     "type": "human"
                 }),
                 "request_id": request_id,
@@ -182,232 +149,309 @@ def submit_feedback(endpoint, request_id, rating):
     except Exception as e:
         logger.error(f"Failed to submit feedback: {e}")
 
-def query_endpoint(endpoint_name, messages, return_traces, stream=True):
-    """Query the endpoint, returning messages and request ID with streaming support."""
-    if not DEPENDENCIES_AVAILABLE:
-        # Fallback response when dependencies are not available
-        return [{"role": "assistant", "content": "I'm sorry, but the Databricks LakeSpend assistant is not currently available. The MLflow and Databricks SDK dependencies are required for the chatbot functionality. You can still use the analytics pages to explore your Databricks costs and usage patterns."}], None
-    
+def _convert_to_responses_format(messages):
+    """Convert chat messages to ResponsesAgent API format."""
+    input_messages = []
+    for msg in messages:
+        if msg["role"] == "user":
+            input_messages.append({
+                "type": "message",
+                "id": str(uuid.uuid4()),
+                "content": [{"type": "input_text", "text": msg["content"]}],
+                "role": "user"
+            })
+        elif msg["role"] == "assistant":
+            # Handle assistant messages with tool calls
+            if msg.get("tool_calls"):
+                # Add function calls
+                for tool_call in msg["tool_calls"]:
+                    input_messages.append({
+                        "type": "function_call",
+                        "id": tool_call["id"],
+                        "call_id": tool_call["id"],
+                        "name": tool_call["function"]["name"],
+                        "arguments": tool_call["function"]["arguments"]
+                    })
+                # Add assistant message if it has content
+                if msg.get("content"):
+                    input_messages.append({
+                        "type": "message",
+                        "id": str(uuid.uuid4()),
+                        "content": [{"type": "output_text", "text": msg["content"]}],
+                        "role": "assistant"
+                    })
+            else:
+                # Regular assistant message
+                input_messages.append({
+                    "type": "message",
+                    "id": str(uuid.uuid4()),
+                    "content": [{"type": "output_text", "text": msg["content"]}],
+                    "role": "assistant"
+                })
+        elif msg["role"] == "tool":
+            input_messages.append({
+                "type": "function_call_output",
+                "call_id": msg.get("tool_call_id"),
+                "output": msg["content"]
+            })
+        elif msg["role"] == "system":
+            # System messages can be converted to user messages with special formatting
+            input_messages.append({
+                "type": "message",
+                "id": str(uuid.uuid4()),
+                "content": [{"type": "input_text", "text": f"System: {msg['content']}"}],
+                "role": "user"
+            })
+    return input_messages
+
+def query_endpoint_stream(endpoint_name: str, messages: list[dict[str, str]], return_traces: bool):
+    """Stream responses from the ResponsesAgent endpoint."""
     try:
         client = get_deploy_client("databricks")
         
-        # Convert messages to the ResponsesAgent format
-        input_items = []
-        for msg in messages:
-            if msg["role"] == "system":
-                # System messages are typically handled differently in ResponsesAgent
-                continue
-            elif msg["role"] == "user":
-                input_items.append({
-                    "type": "message",
-                    "role": "user", 
-                    "content": [{"text": msg["content"]}]
-                })
-            elif msg["role"] == "assistant":
-                input_items.append({
-                    "type": "message",
-                    "role": "assistant",
-                    "content": [{"text": msg["content"]}]
-                })
+        # Convert messages to ResponsesAgent format
+        input_messages = _convert_to_responses_format(messages)
         
-        # Use the ResponsesAgent format instead of OpenAI format
         inputs = {
-            "input": input_items,
-            "max_output_tokens": 2048,
-            "temperature": 0.1,
+            "input": input_messages,
+            "context": {},
+            "stream": True
         }
+        if return_traces:
+            inputs["databricks_options"] = {"return_trace": True}
+
+        for chunk in client.predict_stream(endpoint=endpoint_name, inputs=inputs):
+            yield chunk
+    except Exception as e:
+        logger.error(f"Streaming failed: {e}")
+        raise e
+
+def query_endpoint(endpoint_name, messages, return_traces):
+    """Query the ResponsesAgent endpoint, returning messages and request ID."""
+    try:
+        client = get_deploy_client("databricks")
         
+        # Convert messages to ResponsesAgent format
+        input_messages = _convert_to_responses_format(messages)
+        
+        inputs = {
+            "input": input_messages,
+            "context": {}
+        }
         if return_traces:
             inputs["databricks_options"] = {"return_trace": True}
         
-        if stream:
-            # Use streaming prediction
-            result_messages = []
-            request_id = None
-            current_content = ""
+        res = client.predict(endpoint=endpoint_name, inputs=inputs)
+        request_id = res.get("databricks_output", {}).get("databricks_request_id")
+        
+        # Extract messages from the response
+        result_messages = []
+        output_items = res.get("output", [])
+        
+        for item in output_items:
+            item_type = item.get("type")
             
-            try:
-                # Create placeholder for streaming response
-                with st.chat_message("assistant"):
-                    response_placeholder = st.empty()
+            if item_type == "message":
+                # Extract text content from message
+                text_content = ""
+                content_parts = item.get("content", [])
+                
+                for content_part in content_parts:
+                    if content_part.get("type") == "output_text":
+                        text_content += content_part.get("text", "")
+                
+                if text_content:
+                    result_messages.append({
+                        "role": "assistant",
+                        "content": text_content
+                    })
                     
-                    for chunk in client.predict_stream(endpoint=endpoint_name, inputs=inputs):
-                        if hasattr(chunk, 'get'):
-                            # Handle different chunk types
-                            if "databricks_output" in chunk:
-                                request_id = chunk["databricks_output"].get("databricks_request_id")
-                            
-                            # Extract output from chunk
-                            if "output" in chunk:
-                                for output_item in chunk["output"]:
-                                    if output_item.get("type") == "message":
-                                        # Text message chunk
-                                        content_parts = output_item.get("content", [])
-                                        for part in content_parts:
-                                            if isinstance(part, dict) and "text" in part:
-                                                current_content += part["text"]
-                                                # Update the streaming display
-                                                response_placeholder.markdown(current_content + "▌")
-                                        
-                                    elif output_item.get("type") == "function_call":
-                                        # Function call
-                                        fn_name = output_item.get("name", "unknown")
-                                        args = output_item.get("arguments", "{}")
-                                        
-                                        # Show tool call immediately
-                                        if st.session_state.get('show_tool_calls', True):
-                                            st.markdown(f"🔧 **Calling tool:** `{fn_name}`")
-                                            with st.expander(f"Tool Arguments: {fn_name}", expanded=False):
-                                                try:
-                                                    parsed_args = json.loads(args) if isinstance(args, str) else args
-                                                    st.json(parsed_args)
-                                                except:
-                                                    st.code(args, language="json")
-                                        
-                                        result_messages.append({
-                                            "role": "assistant",
-                                            "content": "",
-                                            "tool_calls": [{
-                                                "id": output_item.get("call_id"),
-                                                "type": "function", 
-                                                "function": {
-                                                    "name": fn_name,
-                                                    "arguments": args
-                                                }
-                                            }]
-                                        })
-                                        
-                                    elif output_item.get("type") == "function_call_output":
-                                        # Tool response
-                                        output_content = output_item.get("output", "")
-                                        call_id = output_item.get("call_id")
-                                        
-                                        if st.session_state.get('show_tool_responses', True):
-                                            st.markdown("🛠️ **Tool Response:**")
-                                            with st.expander("Tool Output", expanded=False):
-                                                try:
-                                                    parsed_content = json.loads(output_content) if isinstance(output_content, str) else output_content
-                                                    st.json(parsed_content)
-                                                except:
-                                                    st.text(output_content)
-                                        
-                                        result_messages.append({
-                                            "role": "tool",
-                                            "content": output_content,
-                                            "tool_call_id": call_id
-                                        })
-                    
-                    # Final content update - remove cursor
-                    if current_content:
-                        response_placeholder.markdown(current_content)
-                        result_messages.append({
-                            "role": "assistant",
-                            "content": current_content
-                        })
-                        
-            except Exception as stream_error:
-                logger.error(f"Streaming error: {stream_error}")
-                st.error(f"Streaming failed: {stream_error}")
-                # Fallback to non-streaming
-                return query_endpoint(endpoint_name, messages, return_traces, stream=False)
-            
-            return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
-            
-        else:
-            # Non-streaming fallback
-            res = client.predict(endpoint=endpoint_name, inputs=inputs)
-            request_id = res.get("databricks_output", {}).get("databricks_request_id")
-            
-            # Extract messages from the ResponsesAgent response format
-            result_messages = []
-            
-            if "output" in res:
-                # ResponsesAgent format
-                for output_item in res["output"]:
-                    if output_item.get("type") == "message":
-                        # Text message
-                        content_parts = output_item.get("content", [])
-                        content_text = ""
-                        for part in content_parts:
-                            if isinstance(part, dict) and "text" in part:
-                                content_text += part["text"]
-                            elif isinstance(part, str):
-                                content_text += part
-                        
-                        if content_text:
-                            result_messages.append({
-                                "role": "assistant",
-                                "content": content_text
-                            })
-                    elif output_item.get("type") == "function_call":
-                        # Function call
-                        result_messages.append({
-                            "role": "assistant",
-                            "content": "",
-                            "tool_calls": [{
-                                "id": output_item.get("call_id"),
-                                "type": "function", 
-                                "function": {
-                                    "name": output_item.get("name"),
-                                    "arguments": output_item.get("arguments", "{}")
-                                }
-                            }]
-                        })
-                    elif output_item.get("type") == "function_call_output":
-                        # Tool response
-                        result_messages.append({
-                            "role": "tool",
-                            "content": output_item.get("output", ""),
-                            "tool_call_id": output_item.get("call_id")
-                        })
-            else:
-                # Fallback if response format is different
-                result_messages = [{"role": "assistant", "content": str(res)}]
-            
-            return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
-            
+            elif item_type == "function_call":
+                # Handle function calls
+                call_id = item.get("call_id")
+                function_name = item.get("name")
+                arguments = item.get("arguments", "")
+                
+                tool_calls = [{
+                    "id": call_id,
+                    "type": "function", 
+                    "function": {
+                        "name": function_name,
+                        "arguments": arguments
+                    }
+                }]
+                result_messages.append({
+                    "role": "assistant",
+                    "content": "",
+                    "tool_calls": tool_calls
+                })
+                
+            elif item_type == "function_call_output":
+                # Handle function call output/result
+                call_id = item.get("call_id")
+                output_content = item.get("output", "")
+                
+                result_messages.append({
+                    "role": "tool",
+                    "content": output_content,
+                    "tool_call_id": call_id
+                })
+        
+        return result_messages or [{"role": "assistant", "content": "No response found"}], request_id
     except Exception as e:
         logger.error(f"Query failed: {e}")
-        return [{"role": "assistant", "content": f"I encountered an error while processing your request: {str(e)}. Please try again or check if the endpoint is properly configured."}], None
+        return [{"role": "assistant", "content": f"Error: {str(e)}"}], None
+
+def query_responses_endpoint_and_render(input_messages):
+    """Handle ResponsesAgent streaming format using MLflow types."""
+    from mlflow.types.responses import ResponsesAgentStreamEvent
+    
+    with st.chat_message("assistant"):
+        response_area = st.empty()
+        response_area.markdown("_Processing tagging request..._")
+        
+        # Track all the messages that need to be rendered in order
+        all_messages = []
+        request_id = None
+
+        try:
+            for raw_event in query_endpoint_stream(
+                endpoint_name=SERVING_ENDPOINT,
+                messages=input_messages,
+                return_traces=endpoint_supports_feedback(SERVING_ENDPOINT)
+            ):
+                # Extract databricks_output for request_id
+                if "databricks_output" in raw_event:
+                    req_id = raw_event["databricks_output"].get("databricks_request_id")
+                    if req_id:
+                        request_id = req_id
+                
+                # Parse using MLflow streaming event types
+                if "type" in raw_event:
+                    event = ResponsesAgentStreamEvent.model_validate(raw_event)
+                    
+                    if hasattr(event, 'item') and event.item:
+                        item = event.item  # This is a dict, not a parsed object
+                        
+                        if item.get("type") == "message":
+                            # Extract text content from message if present
+                            content_parts = item.get("content", [])
+                            for content_part in content_parts:
+                                if content_part.get("type") == "output_text":
+                                    text = content_part.get("text", "")
+                                    if text:
+                                        all_messages.append({
+                                            "role": "assistant",
+                                            "content": text
+                                        })
+                            
+                        elif item.get("type") == "function_call":
+                            # Tool call
+                            call_id = item.get("call_id")
+                            function_name = item.get("name")
+                            arguments = item.get("arguments", "")
+                            
+                            # Add to messages for history
+                            all_messages.append({
+                                "role": "assistant",
+                                "content": "",
+                                "tool_calls": [{
+                                    "id": call_id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": function_name,
+                                        "arguments": arguments
+                                    }
+                                }]
+                            })
+                            
+                        elif item.get("type") == "function_call_output":
+                            # Tool call output/result
+                            call_id = item.get("call_id")
+                            output = item.get("output", "")
+                            
+                            # Add to messages for history
+                            all_messages.append({
+                                "role": "tool",
+                                "content": output,
+                                "tool_call_id": call_id
+                            })
+                
+                # Update the display by rendering all accumulated messages
+                if all_messages:
+                    response_area.empty()
+                    with response_area.container():
+                        for msg in all_messages:
+                            render_message(msg)
+
+            return AssistantResponse(messages=all_messages, request_id=request_id)
+        except Exception:
+            response_area.markdown("_Ran into an error. Retrying without streaming..._")
+            messages, request_id = query_endpoint(
+                endpoint_name=SERVING_ENDPOINT,
+                messages=input_messages,
+                return_traces=endpoint_supports_feedback(SERVING_ENDPOINT)
+            )
+            response_area.empty()
+            with response_area.container():
+                for message in messages:
+                    render_message(message)
+            return AssistantResponse(messages=messages, request_id=request_id)
 
 def get_system_prompt():
-    """Get the system prompt for the Databricks LakeSpend assistant"""
-    return """You are a helpful Databricks LakeSpend Assistant that specializes in cost management and analytics for Databricks workspaces.
+    """Get the system prompt for the resource tagging agent"""
+    return """You are a helpful Databricks Resource Tagging Agent assistant that specializes in tag management for Databricks resources.
 
 You can help users with:
-- Analyzing Databricks costs and spending patterns
-- Understanding job, cluster, and serverless compute costs
-- Providing insights on model serving expenses
-- Identifying cost optimization opportunities
-- Explaining usage trends and patterns
-- Recommending best practices for cost management
-- Troubleshooting cost-related issues
-- Interpreting billing and usage data
+- Managing tags on clusters, SQL warehouses, jobs, and Delta Live Tables pipelines  
+- Finding resources by their tags
+- Generating compliance reports for required tags
+- Bulk updating tags across multiple resources
+- Understanding tag naming conventions and best practices
+- Troubleshooting tag-related issues
 
-You have access to the following types of data and analytics:
-- Job analytics (job costs, performance, retry patterns)
-- Serverless analytics (notebook, job, and consumption costs)
-- Model serving analytics (serving costs and usage)
-- User analytics (individual and team spending patterns)
-- Historical trends and spending alerts
+Available MCP Tools for Databricks Resource Tagging:
 
-Always provide clear explanations with actionable insights. When discussing costs, be specific about time periods and provide context for the numbers. Help users understand not just what they're spending, but why and how they can optimize their usage.
+**Cluster Tag Management:**
+- list_cluster_tags: List all tags for a specific cluster
+- update_cluster_tags: Update tags on a cluster (add, modify, or remove)
+- get_all_clusters_with_tags: Get all clusters and their current tags
 
-Focus on being helpful, accurate, and practical in your recommendations. If you need more specific information about their workspace to provide better insights, ask clarifying questions."""
+**SQL Warehouse Tag Management:**
+- list_warehouse_tags: List all tags for a specific SQL warehouse
+- update_warehouse_tags: Update tags on a SQL warehouse
+- get_all_warehouses_with_tags: Get all SQL warehouses and their current tags
+
+**Job Tag Management:**
+- list_job_tags: List all tags for a specific job
+- update_job_tags: Update tags on a job
+- get_all_jobs_with_tags: Get all jobs and their current tags
+
+**Pipeline Tag Management:**
+- list_pipeline_tags: List all tags for a specific pipeline
+- update_pipeline_tags: Update tags on a pipeline
+- get_all_pipelines_with_tags: Get all pipelines and their current tags
+
+**Bulk Operations:**
+- bulk_update_tags: Update tags across multiple resources at once
+- find_resources_by_tag: Find all resources that have specific tag keys or values
+- tag_compliance_report: Generate a report on tag compliance across resources
+
+Always provide clear explanations of what actions you're taking and what the results mean. Help users follow Databricks tagging best practices."""
 
 def display_predefined_prompts():
-    """Display predefined prompts for common cost analysis scenarios"""
-    st.markdown("### 💡 Quick Analytics Questions")
+    """Display predefined prompts for common tagging scenarios"""
+    st.markdown("### 🏷️ Quick Tagging Actions")
     
     prompts = [
-        "What are my top 5 most expensive jobs this month?",
-        "Show me serverless computing cost trends over the last 30 days",
-        "Which users are spending the most on compute resources?", 
-        "How can I optimize my model serving costs?",
-        "What are the main drivers of my Databricks spending?",
-        "Analyze job retry patterns and their cost impact",
-        "Compare serverless vs cluster costs for my workloads",
-        "What cost optimization recommendations do you have?"
+        "Show me all clusters and their current tags",
+        "How do I add cost center tags to multiple resources?", 
+        "Generate a compliance report for required tags",
+        "Find all resources tagged with environment=production",
+        "What are the best practices for Databricks resource tagging?",
+        "Help me bulk update tags for my development resources",
+        "Show me all untagged clusters",
+        "How do I remove obsolete tags from pipelines?"
     ]
     
     cols = st.columns(2)
@@ -417,50 +461,57 @@ def display_predefined_prompts():
                 return prompt
     return None
 
-def display_features_info():
-    """Display information about available features"""
-    with st.expander("📊 Available Analytics", expanded=False):
+def display_mcp_tools_info():
+    """Display information about available MCP tools"""
+    with st.expander("🛠️ Available Tagging Tools", expanded=False):
         st.markdown("""
-        **Cost Analytics:**
-        - Job cost analysis and trends
-        - Serverless compute spending
-        - Model serving cost breakdown
-        - User and team spending patterns
+        **Cluster Management:**
+        - List/update cluster tags
+        - Get all clusters with tags
         
-        **Performance Insights:**
-        - Job retry patterns and failures
-        - Resource utilization analysis
-        - Cost per compute hour trends
-        - Spending alerts and notifications
+        **SQL Warehouse Management:**
+        - List/update warehouse tags
+        - Get all warehouses with tags
         
-        **Optimization Recommendations:**
-        - Right-sizing compute resources
-        - Identifying idle or underutilized assets
-        - Cost allocation and chargeback insights
-        - Best practices for cost management
+        **Job Management:**
+        - List/update job tags
+        - Get all jobs with tags
+        
+        **Pipeline Management:**
+        - List/update pipeline tags
+        - Get all pipelines with tags
+        
+        **Bulk Operations:**
+        - Bulk tag updates across resources
+        - Find resources by tag criteria
+        - Generate compliance reports
         """)
 
-def display_cost_examples():
-    """Display common cost analysis examples and patterns"""
-    with st.expander("💰 Cost Analysis Examples", expanded=False):
+def display_tagging_examples():
+    """Display common tagging examples and patterns"""
+    with st.expander("📚 Tagging Examples", expanded=False):
         st.markdown("""
-        **Common Cost Questions:**
+        **Common Tag Patterns:**
         
         ```
-        Monthly Spend Analysis:
-        - "What did we spend on compute last month?"
-        - "Show me cost breakdown by team/user"
-        - "Which jobs are driving our highest costs?"
+        Environment Tags:
+        - environment: production | staging | development
+        - env: prod | stage | dev
         
-        Trend Analysis:
-        - "How has our spending changed over time?"
-        - "What are our peak usage hours?"
-        - "Identify unusual spending spikes"
+        Ownership Tags:
+        - team: data-engineering | analytics | ml-ops
+        - owner: john.doe@company.com
+        - project: customer-analytics
         
-        Optimization Opportunities:
-        - "Which clusters are idle most of the time?"
-        - "What jobs have high retry rates?"
-        - "How can we reduce model serving costs?"
+        Cost Management Tags:
+        - cost-center: eng-001 | sales-002
+        - budget-code: fy25-q3-ml
+        - billing-group: data-platform
+        
+        Compliance Tags:
+        - data-classification: public | internal | confidential
+        - retention-policy: 7-years | 3-years
+        - compliance: sox | gdpr | hipaa
         ```
         """)
 
@@ -470,17 +521,17 @@ def show_chatbot():
     if "history" not in st.session_state:
         st.session_state.history = []
 
-    st.markdown('<div class="main-header">🤖 Databricks LakeSpend Assistant</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-header">🏷️ Resource Tagging Agent</div>', unsafe_allow_html=True)
     
     # Display agent description
     st.markdown(f"""
-    ### Your Databricks Cost Management Assistant
+    ### Your Databricks Resource Tagging Assistant
     
-    I'm here to help you analyze costs, understand spending patterns, and optimize your Databricks usage. 
-    I can provide insights on job costs, serverless compute, model serving expenses, and user spending patterns.
+    I'm here to help you manage tags across your Databricks resources including clusters, SQL warehouses, jobs, and pipelines. 
+    I can help with individual resource tagging, bulk operations, compliance reporting, and tagging best practices.
     
     **Endpoint:** `{SERVING_ENDPOINT}`  
-    **Status:** {"🟢 Ready" if DEPENDENCIES_AVAILABLE else "🟡 Limited Mode (missing dependencies)"}
+    **Connected to MCP Server:** Ready to perform tag management operations!
     """)
     
     # Create layout
@@ -499,26 +550,6 @@ def show_chatbot():
         st.markdown("---")
         st.markdown("### 🛠️ Chat Controls")
         
-        # Tool visibility controls
-        st.session_state.show_tool_calls = st.checkbox(
-            "Show Tool Calls", 
-            value=st.session_state.get('show_tool_calls', True),
-            help="Display when the assistant calls MCP tools"
-        )
-        
-        st.session_state.show_tool_responses = st.checkbox(
-            "Show Tool Responses", 
-            value=st.session_state.get('show_tool_responses', True),
-            help="Display the responses from MCP tools"
-        )
-        
-        # Streaming toggle
-        st.session_state.enable_streaming = st.checkbox(
-            "Enable Streaming", 
-            value=st.session_state.get('enable_streaming', True),
-            help="Stream responses in real-time"
-        )
-        
         if st.button("🗑️ Clear Chat", use_container_width=True):
             st.session_state.history = []
             st.rerun()
@@ -527,84 +558,48 @@ def show_chatbot():
         message_count = len(st.session_state.history)
         st.markdown(f"**Messages:** {message_count}")
         
-        # Debug information
-        if st.session_state.get('show_debug', False):
-            with st.expander("🐛 Debug Info", expanded=False):
-                st.write("**Input Messages:**")
-                st.json([msg for msg in input_messages[-3:]])  # Show last 3 messages
-                st.write("**Endpoint:**", SERVING_ENDPOINT)
-                st.write("**Streaming:**", use_streaming)
-        
         # Check endpoint availability
-        if DEPENDENCIES_AVAILABLE:
-            try:
-                task_type = _get_endpoint_task_type(SERVING_ENDPOINT)
-                st.success(f"✅ Assistant Ready ({task_type})")
-            except Exception:
-                st.error("❌ Assistant Offline")
-        else:
-            st.warning("⚠️ Limited Mode")
+        try:
+            task_type = _get_endpoint_task_type(SERVING_ENDPOINT)
+            st.success(f"✅ Agent Ready ({task_type})")
+        except Exception:
+            st.error("❌ Agent Offline")
         
-        # Debug toggle
-        st.session_state.show_debug = st.checkbox(
-            "Show Debug Info", 
-            value=st.session_state.get('show_debug', False),
-            help="Show request/response debug information"
-        )
-        
-        # Features info and examples
-        display_features_info()
-        display_cost_examples()
+        # MCP Tools info and examples
+        display_mcp_tools_info()
+        display_tagging_examples()
 
     # Chat input box at the bottom of the page (outside columns)
-    prompt = st.chat_input("Ask me about your Databricks costs and usage...")
+    prompt = st.chat_input("Ask me about resource tagging...")
     
     # Process selected prompt or user input
     final_prompt = selected_prompt or prompt
     
     if final_prompt:
         try:
+            # Get the task type for this endpoint
+            task_type = _get_endpoint_task_type(SERVING_ENDPOINT)
+            
+            # Add system message if this is the first message
+            if not st.session_state.history:
+                system_msg = get_system_prompt()
+                st.session_state.history.append(AssistantResponse(
+                    messages=[{"role": "system", "content": system_msg}],
+                    request_id=None
+                ))
+            
             # Add user message to chat history
             user_msg = UserMessage(content=final_prompt)
             st.session_state.history.append(user_msg)
             user_msg.render(len(st.session_state.history) - 1)
 
             # Convert history to standard chat message format
-            # Note: System prompt is handled within the agent itself, not sent as input
-            input_messages = []
-            for elem in st.session_state.history:
-                for msg in elem.to_input_messages():
-                    # Skip system messages as they're handled by the agent internally
-                    if msg.get("role") != "system":
-                        input_messages.append(msg)
+            input_messages = [msg for elem in st.session_state.history for msg in elem.to_input_messages()]
             
-            # Get response from the endpoint
-            use_streaming = st.session_state.get('enable_streaming', True)
-            
-            if use_streaming:
-                # For streaming, we handle display within query_endpoint
-                messages, request_id = query_endpoint(
-                    endpoint_name=SERVING_ENDPOINT,
-                    messages=input_messages,
-                    return_traces=endpoint_supports_feedback(SERVING_ENDPOINT) if DEPENDENCIES_AVAILABLE else False,
-                    stream=True
-                )
-            else:
-                # Non-streaming response
-                messages, request_id = query_endpoint(
-                    endpoint_name=SERVING_ENDPOINT,
-                    messages=input_messages,
-                    return_traces=endpoint_supports_feedback(SERVING_ENDPOINT) if DEPENDENCIES_AVAILABLE else False,
-                    stream=False
-                )
-                
-                # Display assistant response for non-streaming
-                with st.chat_message("assistant"):
-                    for message in messages:
-                        render_message(message)
+            # Handle the response using ResponsesAgent format
+            assistant_response = query_responses_endpoint_and_render(input_messages)
             
             # Add assistant response to history
-            assistant_response = AssistantResponse(messages=messages, request_id=request_id)
             st.session_state.history.append(assistant_response)
             
         except Exception as e:
@@ -613,4 +608,3 @@ def show_chatbot():
 
     # Info section
     st.markdown("---")
-    st.markdown("**💡 Tip:** Use the analytics pages above to explore your data, then ask me specific questions about what you discover!")

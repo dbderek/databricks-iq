@@ -120,21 +120,6 @@ class DatabricksTagsManager {
             case 'pipelines':
                 await this.loadPipelines();
                 break;
-            case 'experiments':
-                await this.loadExperiments();
-                break;
-            case 'models':
-                await this.loadModels();
-                break;
-            case 'catalogs':
-                await this.loadCatalogs();
-                break;
-            case 'serving':
-                await this.loadServingEndpoints();
-                break;
-            case 'budgets':
-                await this.loadBudgetPolicies();
-                break;
         }
     }
 
@@ -230,66 +215,6 @@ class DatabricksTagsManager {
         }
     }
 
-    async loadExperiments() {
-        try {
-            this.showLoading('experiments-list');
-            const experiments = await this.apiCall('/experiments');
-            this.renderResourceList('experiments-list', experiments, 'experiment');
-            this.hideLoading('experiments-list');
-        } catch (error) {
-            this.showError('Failed to load experiments');
-            this.hideLoading('experiments-list');
-        }
-    }
-
-    async loadModels() {
-        try {
-            this.showLoading('models-list');
-            const models = await this.apiCall('/models');
-            this.renderResourceList('models-list', models, 'model');
-            this.hideLoading('models-list');
-        } catch (error) {
-            this.showError('Failed to load models');
-            this.hideLoading('models-list');
-        }
-    }
-
-    async loadCatalogs() {
-        try {
-            this.showLoading('catalogs-list');
-            const catalogs = await this.apiCall('/catalogs');
-            this.renderResourceList('catalogs-list', catalogs, 'catalog');
-            this.hideLoading('catalogs-list');
-        } catch (error) {
-            this.showError('Failed to load catalogs');
-            this.hideLoading('catalogs-list');
-        }
-    }
-
-    async loadServingEndpoints() {
-        try {
-            this.showLoading('serving-list');
-            const endpoints = await this.apiCall('/serving_endpoints');
-            this.renderResourceList('serving-list', endpoints, 'serving_endpoint');
-            this.hideLoading('serving-list');
-        } catch (error) {
-            this.showError('Failed to load serving endpoints');
-            this.hideLoading('serving-list');
-        }
-    }
-
-    async loadBudgetPolicies() {
-        try {
-            this.showLoading('budget-policies-list');
-            const policies = await this.apiCall('/budget_policies');
-            this.renderBudgetPoliciesList('budget-policies-list', policies);
-            this.hideLoading('budget-policies-list');
-        } catch (error) {
-            this.showError('Failed to load budget policies');
-            this.hideLoading('budget-policies-list');
-        }
-    }
-
     renderResourceList(containerId, resources, resourceType) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -312,39 +237,6 @@ class DatabricksTagsManager {
                 </div>
                 <div class="tags-container">
                     ${this.renderTags(resource.tags || {})}
-                </div>
-            </div>
-        `).join('');
-    }
-
-    renderBudgetPoliciesList(containerId, policies) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        if (policies.length === 0) {
-            container.innerHTML = '<p class="text-center">No budget policies found</p>';
-            return;
-        }
-
-        container.innerHTML = policies.map(policy => `
-            <div class="resource-item">
-                <div class="resource-header">
-                    <div>
-                        <div class="resource-name">${policy.policy_name}</div>
-                        <div class="resource-id">ID: ${policy.policy_id}</div>
-                        <div class="resource-meta">Created: ${policy.created_time || 'Unknown'}</div>
-                    </div>
-                    <div class="resource-actions">
-                        <button class="btn btn-primary" onclick="tagsManager.editBudgetPolicy('${policy.policy_id}', '${policy.policy_name}')">
-                            Edit Policy
-                        </button>
-                        <button class="btn btn-secondary" onclick="tagsManager.applyBudgetPolicy('${policy.policy_id}', '${policy.policy_name}')">
-                            Apply to Resources
-                        </button>
-                    </div>
-                </div>
-                <div class="tags-container">
-                    ${this.renderTags(policy.custom_tags || {})}
                 </div>
             </div>
         `).join('');
@@ -702,48 +594,5 @@ function refreshCurrentTab() {
     const activeTab = document.querySelector('.tab-button.active');
     if (activeTab && window.tagsManager) {
         window.tagsManager.loadTabData(activeTab.dataset.tab);
-    }
-}
-
-// Global wrapper functions for new resource types
-function loadExperiments() {
-    if (window.tagsManager) {
-        window.tagsManager.loadExperiments();
-    }
-}
-
-function loadModels() {
-    if (window.tagsManager) {
-        window.tagsManager.loadModels();
-    }
-}
-
-function loadCatalogs() {
-    if (window.tagsManager) {
-        window.tagsManager.loadCatalogs();
-    }
-}
-
-function loadServingEndpoints() {
-    if (window.tagsManager) {
-        window.tagsManager.loadServingEndpoints();
-    }
-}
-
-function loadBudgetPolicies() {
-    if (window.tagsManager) {
-        window.tagsManager.loadBudgetPolicies();
-    }
-}
-
-function showCreateBudgetPolicy() {
-    if (window.tagsManager) {
-        window.tagsManager.showCreateBudgetPolicy();
-    }
-}
-
-function showApplyBudgetPolicy() {
-    if (window.tagsManager) {
-        window.tagsManager.showApplyBudgetPolicy();
     }
 }

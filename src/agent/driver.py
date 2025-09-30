@@ -37,6 +37,7 @@ DATABRICKS_CLIENT_ID = sp_client_id
 DATABRICKS_CLIENT_SECRET = dbutils.secrets.get(scope=sp_secret_scope, key=sp_secret_key)
 DATABRICKS_MCP_SERVER_URL = mcp_app_url
 print(DATABRICKS_HOST)
+print(DATABRICKS_MCP_SERVER_URL)
 
 # # Load your service principal credentials into environment variables
 os.environ["DATABRICKS_HOST"] = DATABRICKS_HOST

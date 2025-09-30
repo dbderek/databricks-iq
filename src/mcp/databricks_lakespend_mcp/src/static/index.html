@@ -9,8 +9,8 @@
 <body>
     <div class="container">
         <header>
-            <h1>🏷️ Databricks LakeSpend MCP Server</h1>
-            <p>Comprehensive tag and budget management for Databricks resources</p>
+            <h1>🏷️ Databricks Tags MCP Server</h1>
+            <p>Comprehensive tag management for Databricks resources</p>
             <div id="connectionStatus" class="status-indicator">
                 <span id="statusDot" class="status-dot"></span>
                 <span id="statusText">Checking connection...</span>
@@ -25,11 +25,6 @@
                 <button class="tab-button" data-tab="warehouses">Warehouses</button>
                 <button class="tab-button" data-tab="jobs">Jobs</button>
                 <button class="tab-button" data-tab="pipelines">Pipelines</button>
-                <button class="tab-button" data-tab="experiments">Experiments</button>
-                <button class="tab-button" data-tab="models">Models</button>
-                <button class="tab-button" data-tab="catalogs">Catalogs</button>
-                <button class="tab-button" data-tab="serving">Serving</button>
-                <button class="tab-button" data-tab="budgets">Budget Policies</button>
                 <button class="tab-button" data-tab="bulk">Bulk Operations</button>
                 <button class="tab-button" data-tab="compliance">Compliance</button>
             </nav>
@@ -71,51 +66,6 @@
                             <span class="label">DLT Pipelines</span>
                         </div>
                         <button onclick="loadPipelines()" class="btn btn-primary">Manage Tags</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>🧪 Experiments</h3>
-                        <div class="metric">
-                            <span class="value" id="experimentCount">-</span>
-                            <span class="label">MLflow Experiments</span>
-                        </div>
-                        <button onclick="loadExperiments()" class="btn btn-primary">Manage Tags</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>🤖 Models</h3>
-                        <div class="metric">
-                            <span class="value" id="modelCount">-</span>
-                            <span class="label">Registered Models</span>
-                        </div>
-                        <button onclick="loadModels()" class="btn btn-primary">Manage Tags</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>🗂️ Catalogs</h3>
-                        <div class="metric">
-                            <span class="value" id="catalogCount">-</span>
-                            <span class="label">Unity Catalogs</span>
-                        </div>
-                        <button onclick="loadCatalogs()" class="btn btn-primary">Manage Tags</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>🚀 Serving</h3>
-                        <div class="metric">
-                            <span class="value" id="servingCount">-</span>
-                            <span class="label">Serving Endpoints</span>
-                        </div>
-                        <button onclick="loadServingEndpoints()" class="btn btn-primary">Manage Tags</button>
-                    </div>
-                    
-                    <div class="card">
-                        <h3>💰 Budget Policies</h3>
-                        <div class="metric">
-                            <span class="value" id="budgetPolicyCount">-</span>
-                            <span class="label">Active Policies</span>
-                        </div>
-                        <button onclick="loadBudgetPolicies()" class="btn btn-primary">Manage Budgets</button>
                     </div>
                 </div>
 
@@ -178,65 +128,6 @@
                     <button onclick="loadPipelines()" class="btn btn-primary">Refresh Pipelines</button>
                     <div id="pipelinesContainer">
                         <p class="loading">Click "Refresh Pipelines" to load pipeline data...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Experiments Tab -->
-            <div id="experiments" class="tab-content">
-                <div class="card">
-                    <h3>🧪 Experiment Tag Management</h3>
-                    <button onclick="loadExperiments()" class="btn btn-primary">Refresh Experiments</button>
-                    <div id="experimentsContainer">
-                        <p class="loading">Click "Refresh Experiments" to load experiment data...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Models Tab -->
-            <div id="models" class="tab-content">
-                <div class="card">
-                    <h3>🤖 Model Tag Management</h3>
-                    <button onclick="loadModels()" class="btn btn-primary">Refresh Models</button>
-                    <div id="modelsContainer">
-                        <p class="loading">Click "Refresh Models" to load model data...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Catalogs Tab -->
-            <div id="catalogs" class="tab-content">
-                <div class="card">
-                    <h3>🗂️ Catalog Tag Management</h3>
-                    <button onclick="loadCatalogs()" class="btn btn-primary">Refresh Catalogs</button>
-                    <div id="catalogsContainer">
-                        <p class="loading">Click "Refresh Catalogs" to load catalog data...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Serving Tab -->
-            <div id="serving" class="tab-content">
-                <div class="card">
-                    <h3>🚀 Serving Endpoint Tag Management</h3>
-                    <button onclick="loadServingEndpoints()" class="btn btn-primary">Refresh Serving Endpoints</button>
-                    <div id="servingContainer">
-                        <p class="loading">Click "Refresh Serving Endpoints" to load endpoint data...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Budget Policies Tab -->
-            <div id="budgets" class="tab-content">
-                <div class="card">
-                    <h3>💰 Budget Policy Management</h3>
-                    <div class="actions-grid">
-                        <button onclick="showCreateBudgetPolicy()" class="btn btn-primary">Create New Policy</button>
-                        <button onclick="loadBudgetPolicies()" class="btn btn-secondary">Refresh Policies</button>
-                        <button onclick="showApplyBudgetPolicy()" class="btn btn-secondary">Apply Policy to Resources</button>
-                    </div>
-                    <div id="budgetPoliciesContainer">
-                        <p class="loading">Click "Refresh Policies" to load budget policy data...</p>
                     </div>
                 </div>
             </div>

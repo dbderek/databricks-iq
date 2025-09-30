@@ -244,8 +244,8 @@ def show_header():
 
 def show_chatbot():
     """Show the chatbot interface - moved to separate file"""
-    from chatbot import show_chatbot as chatbot_interface
-    chatbot_interface()
+    import chatbot
+    chatbot.show_chatbot()
 
 def main():
     """Main application function"""
